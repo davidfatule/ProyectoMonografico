@@ -21,6 +21,7 @@ export interface MockTicket {
   fileUrl?: string;
   evaluation?: { rating: number; comment?: string };
   assignee?: { username: string };
+  supportComment?: string;
 }
 
 function getStoredTickets(): MockTicket[] {
@@ -51,7 +52,7 @@ export function createMockTicket(data: Omit<MockTicket, "id" | "ticketNumber" | 
     id,
     ticketNumber,
     createdAt: new Date().toISOString(),
-    assignee: { username: "Tech@Helpdesk.Com" },
+    assignee: { username: "David@Helpdesk.com" },
   };
   tickets.push(ticket);
   setStoredTickets(tickets);

@@ -1,12 +1,19 @@
 import type { ReactNode } from "react";
 import { Link } from "wouter";
 import { Headphones } from "lucide-react";
+import { clearStoredUser } from "@/lib/mockAuth";
+import { clearCachedSessionUser } from "@/lib/indexedDb";
 
 interface PublicLayoutProps {
   children: ReactNode;
 }
 
 export function PublicLayout({ children }: PublicLayoutProps) {
+  const handlePortalClick = () => {
+    clearStoredUser();
+    void clearCachedSessionUser();
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       <header className="bg-white border-b border-slate-100">
@@ -19,11 +26,12 @@ export function PublicLayout({ children }: PublicLayoutProps) {
               <Headphones className="w-5 h-5 text-white" />
             </div>
             <span className="font-semibold text-slate-800 text-base tracking-tight">
-              SoportePro
+              Andrickson Soporte
             </span>
           </Link>
           <Link
             to="/login"
+            onClick={handlePortalClick}
             className="text-sm text-slate-500 hover:text-slate-700 no-underline cursor-pointer font-medium"
             aria-label="Ir al portal de empleados"
           >
@@ -37,7 +45,7 @@ export function PublicLayout({ children }: PublicLayoutProps) {
       <footer className="bg-white border-t border-slate-100 py-5">
         <div className="max-w-4xl mx-auto px-5 sm:px-8 text-center">
           <p className="text-slate-400 text-sm m-0">
-            © {new Date().getFullYear()} SoportePro. Todos los derechos reservados.
+            © {new Date().getFullYear()} Andrickson Soporte. Todos los derechos reservados.
           </p>
         </div>
       </footer>

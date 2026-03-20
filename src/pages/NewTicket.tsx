@@ -26,6 +26,7 @@ export default function NewTicket() {
   const createTicket = useCreateTicket();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [successTicketNumber, setSuccessTicketNumber] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string>("");
 
   const form = useForm<FormValues>({
     resolver: zodResolver(ticketCreateSchema) as Resolver<FormValues>,
@@ -44,10 +45,15 @@ export default function NewTicket() {
   });
 
   const onSubmit = (data: FormValues) => {
+    setSubmitError("");
     createTicket.mutate(data, {
       onSuccess: (response) => {
         setSuccessTicketNumber(response.ticketNumber);
-      }
+      },
+      onError: (err) => {
+        const message = err instanceof Error ? err.message : "No se pudo crear el ticket.";
+        setSubmitError(message);
+      },
     });
   };
 
@@ -58,14 +64,33 @@ export default function NewTicket() {
     }
   };
 
+  const defaultFormValues: FormValues = {
+    status: "Pendiente",
+    branch: "",
+    purchaseDate: "",
+    phone: "",
+    product: "",
+    serialNumber: "",
+    description: "",
+    taxCredit: "",
+    rnc: "",
+    fileUrl: "",
+  };
+
+  const closeSuccessModal = () => {
+    setSuccessTicketNumber(null);
+    form.reset(defaultFormValues);
+    setSelectedFiles([]);
+  };
+
   return (
     <PublicLayout>
       {/* Modal de éxito al crear ticket */}
-      <Dialog open={!!successTicketNumber} onOpenChange={(open) => !open && setSuccessTicketNumber(null)}>
+      <Dialog open={!!successTicketNumber} onOpenChange={(open) => !open && closeSuccessModal()}>
         <div className="w-full max-w-md relative">
           <button
             type="button"
-            onClick={() => setSuccessTicketNumber(null)}
+            onClick={closeSuccessModal}
             className="absolute top-0 right-0 p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
             aria-label="Cerrar"
           >
@@ -234,6 +259,9 @@ export default function NewTicket() {
                 {createTicket.isPending ? "Procesando..." : "Crear Ticket"}
               </Button>
             </div>
+            {submitError && (
+              <p className="text-red-500 text-sm text-right">{submitError}</p>
+            )}
             {Object.keys(form.formState.errors).length > 0 && (
               <p className="text-red-500 text-sm text-right">Por favor, completa todos los campos requeridos (*).</p>
             )}

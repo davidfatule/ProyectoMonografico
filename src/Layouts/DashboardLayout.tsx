@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Link, useLocation } from "wouter";
 import { useUser, useLogout } from "@/hooks/auth";
-import { Headphones, LayoutDashboard, Users, Ticket, LogOut, User as UserIcon } from "lucide-react";
+import { Headphones, LayoutDashboard, Ticket, LogOut, User as UserIcon } from "lucide-react";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -13,9 +13,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [location, setLocation] = useLocation();
 
   const isActive = (path: string) => location === path;
+  const isTechnician = user?.role === "technician";
+  const isAdmin = user?.role === "admin";
+  const dashboardLabel = isTechnician ? "Soporte al cliente" : "Dashboard";
 
   const roleLabel = user?.role === "admin" ? "Admin" : user?.role === "technician" ? "Técnico" : user?.role ?? "";
-  const userEmail = user?.username ? `${user.username}@helpdesk.com` : "";
+  const userEmail = user?.username || "";
 
   return (
     <div className="min-h-screen flex bg-slate-50">
@@ -49,21 +52,29 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 }`}
               >
                 <LayoutDashboard className="w-5 h-5" />
-                Dashboard
+                {dashboardLabel}
               </a>
             </Link>
-            <Link href="/dashboard">
-              <a className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">
-                <Users className="w-5 h-5" />
-                Técnicos
-              </a>
-            </Link>
-            <Link href="/dashboard">
-              <a className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">
+            {(isTechnician || isAdmin) && (
+              <Link href="/tickets">
+                <a
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                    isActive("/tickets")
+                      ? "bg-primary/10 text-primary"
+                      : "text-slate-600 hover:bg-slate-100"
+                  }`}
+                >
+                  <Ticket className="w-5 h-5" />
+                  Tickets
+                </a>
+              </Link>
+            )}
+            {!isTechnician && !isAdmin && (
+              <a className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400">
                 <Ticket className="w-5 h-5" />
                 Tickets
               </a>
-            </Link>
+            )}
           </div>
         </nav>
 
@@ -83,14 +94,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <button
             type="button"
             onClick={() => {
-              setLocation("/login");
-              logout.mutate();
+              logout.mutate(undefined, {
+                onSuccess: () => setLocation("/login"),
+              });
             }}
             disabled={logout.isPending}
             className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50"
           >
             <LogOut className="w-4 h-4" />
-            Cerrar sesión
+            {logout.isPending ? "Cerrando..." : "Cerrar sesión"}
           </button>
         </div>
       </aside>

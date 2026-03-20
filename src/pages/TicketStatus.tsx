@@ -12,7 +12,28 @@ import { useCreateEvaluation } from "@/hooks/evaluations";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 
-const STATUS_STEPS = ["Pendiente", "En Proceso", "Resuelto"];
+const STATUS_STEPS = ["Pendiente", "En Proceso", "Resuelto"] as const;
+
+function getStepCircleClass(stepIndex: number, currentStep: number): string {
+  const isFuture = stepIndex > currentStep;
+  if (isFuture) return "bg-slate-200 text-slate-400";
+  if (stepIndex === 0) return "bg-red-500 text-white ring-2 ring-red-500/30";
+  if (stepIndex === 1) return "bg-blue-500 text-white ring-2 ring-blue-500/30";
+  return "bg-emerald-500 text-white ring-2 ring-emerald-500/30";
+}
+
+function getStepLabelClass(stepIndex: number, currentStep: number): string {
+  const isFuture = stepIndex > currentStep;
+  const isCurrent = stepIndex === currentStep;
+  if (isFuture) return "text-slate-400";
+  if (stepIndex === 0) {
+    return isCurrent ? "text-red-600 font-semibold" : "text-red-700 font-medium";
+  }
+  if (stepIndex === 1) {
+    return isCurrent ? "text-blue-600 font-semibold" : "text-blue-700 font-medium";
+  }
+  return isCurrent ? "text-emerald-600 font-semibold" : "text-emerald-700 font-medium";
+}
 
 export default function TicketStatus() {
   const { ticketNumber } = useParams<{ ticketNumber: string }>();
@@ -32,7 +53,7 @@ export default function TicketStatus() {
   };
 
   const getStatusIndex = (status: string) => {
-    return STATUS_STEPS.indexOf(status);
+    return (STATUS_STEPS as readonly string[]).indexOf(status);
   };
 
   if (isLoading) {
@@ -65,6 +86,7 @@ export default function TicketStatus() {
 
   const isRejected = ticket.status === "Rechazado";
   const currentStep = isRejected ? -1 : getStatusIndex(ticket.status);
+  const supportComment = typeof ticket.supportComment === "string" ? ticket.supportComment : "";
 
   const cardClass = "bg-white rounded-2xl p-6 shadow-[0_2px_8px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] border border-slate-100/80";
 
@@ -92,20 +114,19 @@ export default function TicketStatus() {
             <div className="relative flex justify-between items-center max-w-2xl mx-auto">
               <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-0.5 bg-slate-200 -z-10 rounded-full" />
               <div
-                className="absolute left-0 top-1/2 -translate-y-1/2 h-0.5 bg-primary -z-10 rounded-full transition-all duration-500"
+                className="absolute left-0 top-1/2 -translate-y-1/2 h-0.5 -z-10 rounded-full transition-all duration-500 bg-gradient-to-r from-red-500 via-blue-500 to-emerald-500"
                 style={{ width: `${(Math.max(0, currentStep) / (STATUS_STEPS.length - 1)) * 100}%` }}
               />
               {STATUS_STEPS.map((step, idx) => {
-                const isCompleted = idx <= currentStep;
-                const isCurrent = idx === currentStep;
+                const isReached = idx <= currentStep;
                 return (
                   <div key={step} className="flex flex-col items-center bg-white px-2 py-4">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${
-                      isCompleted ? "bg-primary text-white" : "bg-slate-200 text-slate-400"
-                    }`}>
-                      {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-3 h-3 fill-current" />}
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${getStepCircleClass(idx, currentStep)}`}
+                    >
+                      {isReached ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-3 h-3 fill-current" />}
                     </div>
-                    <span className={`mt-2 text-sm font-medium ${isCurrent ? "text-primary" : isCompleted ? "text-slate-700" : "text-slate-400"}`}>
+                    <span className={`mt-2 text-sm ${getStepLabelClass(idx, currentStep)}`}>
                       {step}
                     </span>
                   </div>
@@ -118,6 +139,17 @@ export default function TicketStatus() {
             </div>
           )}
         </div>
+
+        {supportComment && (
+          <div className={cardClass + " mb-8"}>
+            <h3 className="font-semibold text-lg text-slate-900 border-b border-slate-100 pb-3 mb-4">
+              Comentario del Soporte
+            </h3>
+            <p className="bg-slate-50/80 p-4 rounded-xl text-slate-700 leading-relaxed text-sm border border-slate-100">
+              {supportComment}
+            </p>
+          </div>
+        )}
 
         <div className="grid md:grid-cols-3 gap-6">
           <div className="md:col-span-2 space-y-6">

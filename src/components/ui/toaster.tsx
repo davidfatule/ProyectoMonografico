@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 export function Toaster() {
-  const [message, setMessage] = useState<string | null>(null);
+  const [message] = useState<string | null>(null);
 
   return (
     <>

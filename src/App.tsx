@@ -12,6 +12,7 @@ import NewTicket from "@/pages/NewTicket";
 import TicketStatus from "@/pages/TicketStatus";
 import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
+import Tickets from "@/pages/Tickets";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -22,6 +23,7 @@ function Router() {
       <Route path="/ticket/:ticketNumber/status" component={TicketStatus} />
       <Route path="/login" component={Login} />
       <Route path="/dashboard" component={Dashboard} />
+      <Route path="/tickets" component={Tickets} />
       <Route path="*" component={NotFound} />
     </Switch>
   );

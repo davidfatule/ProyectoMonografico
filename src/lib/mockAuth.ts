@@ -1,6 +1,5 @@
 /**
- * Usuario temporal para desarrollo (sin BD).
- * Cuando tengas MySQL, quitarás esto y usarás solo la API real.
+ * Usuarios locales para autenticación en modo IndexedDB/local.
  */
 
 const STORAGE_KEY = "soportepro_user";
@@ -12,17 +11,17 @@ export interface MockUser {
   role: "admin" | "technician";
 }
 
-/** Credenciales temporales (cambiar cuando conectes MySQL) */
+/** Credenciales locales */
 export const TEMP_USERS: { username: string; password: string; user: MockUser }[] = [
   {
-    username: "admin",
-    password: "admin123",
-    user: { id: 1, name: "Administrador", username: "admin", role: "admin" },
+    username: "admin@helpdesk.com",
+    password: "admin123456",
+    user: { id: 1, name: "Administrador", username: "admin@helpdesk.com", role: "admin" },
   },
   {
-    username: "tecnico1",
-    password: "tecnico123",
-    user: { id: 2, name: "Técnico Soporte", username: "tecnico1", role: "technician" },
+    username: "tech@helpdesk.com",
+    password: "123456",
+    user: { id: 2, name: "Técnico", username: "tech@helpdesk.com", role: "technician" },
   },
 ];
 

@@ -45,7 +45,7 @@ export default function Login() {
   // Si ya hay usuario, no mostrar nada (useEffect redirige al dashboard)
   if (user) return null;
 
-  // Mientras carga la sesión, mostrar formulario; si /api/auth/me falla, también se muestra el login
+  // Mientras carga la sesión local, mostrar formulario.
   return (
     <div className="min-h-screen flex bg-[#F5F8FA] relative">
       <Link
@@ -84,7 +84,7 @@ export default function Login() {
                   <Input 
                     {...form.register("username")}
                     className="pl-10 h-12 rounded-xl bg-slate-50"
-                    placeholder="admin o tecnico1"
+                    placeholder="admin@helpdesk.com o tech@helpdesk.com"
                   />
                 </div>
               </div>
@@ -137,7 +137,7 @@ export default function Login() {
               </button>
 
               <p className="text-xs text-slate-400 text-center pt-2">
-                Usuario temporal: <strong>admin</strong> / <strong>admin123</strong> (o tecnico1 / tecnico123)
+                Usuarios: <strong>David@Helpdesk.com</strong>, <strong>Damian@Helpdesk.com</strong>, <strong>Luis@Helpdesk.com</strong> (clave 123456) · Admin: <strong>admin@Helpdesk.com</strong> / admin123456
               </p>
             </form>
           </div>
