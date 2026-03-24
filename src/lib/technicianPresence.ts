@@ -92,14 +92,36 @@ function incrementAssignCounter(): number {
   }
 }
 
+/** Devuelve el username canónico de `pool` que coincide en minúsculas (presencia guarda claves normalizadas). */
+function pickCanonicalUsername(pool: string[], normalizedOrCanonical: string): string {
+  const n = normalizeU(normalizedOrCanonical);
+  return pool.find((u) => normalizeU(u) === n) ?? normalizedOrCanonical;
+}
+
 /**
- * Siguiente asignado: round-robin entre técnicos con sesión activa (heartbeat).
- * Si ninguno está en línea, reparte entre los tres técnicos del sistema.
+ * Siguiente técnico asignado:
+ *
+ * 1. Si hay **al menos un técnico con sesión activa** en este navegador (heartbeat en
+ *    `useTechnicianPresence`), el reparto es **round-robin solo entre ellos**. Quien no
+ *    esté conectado no recibe tickets nuevos (p. ej. David fuera → solo Damian y Luis).
+ *
+ * 2. Si **nadie** aparece como en línea en este navegador (p. ej. formulario público
+ *    desde el móvil del cliente), se reparte entre **todos** los técnicos del sistema
+ *    para que el ticket no quede sin asignar.
+ *
+ * Nota: la presencia es **local al navegador**; sin servidor no se sabe quién está
+ * conectado desde otro dispositivo. Para reparto global hace falta backend.
  */
 export function getNextTechnicianAssigneeUsername(): string {
   const poolAll = getTechnicianUsernames();
-  const online = getOnlineTechnicianUsernames(poolAll);
-  const pool = online.length > 0 ? online : poolAll;
+  if (poolAll.length === 0) return "david@helpdesk.com";
+
+  const onlineRaw = getOnlineTechnicianUsernames(poolAll);
+  const pool =
+    onlineRaw.length > 0
+      ? onlineRaw.map((u) => pickCanonicalUsername(poolAll, u))
+      : poolAll;
+
   const idx = incrementAssignCounter();
   return pool[idx % pool.length];
 }

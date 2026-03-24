@@ -80,3 +80,31 @@ export function checkTempCredentials(username: string, password: string): MockUs
   );
   return found ? found.user : null;
 }
+
+/**
+ * Indica si el asignado del ticket corresponde al usuario de sesión.
+ * Compara por correo y, si hace falta, por nombre visible (p. ej. ticket con "Damian"
+ * y sesión con "damian@helpdesk.com"), para que el panel técnico coincida con la tabla Tickets.
+ */
+export function assigneeMatchesSession(
+  assigneeUsername: string | null | undefined,
+  sessionUsername: string | null | undefined
+): boolean {
+  if (!sessionUsername?.trim()) return false;
+  const sess = sessionUsername.trim().toLowerCase();
+  const raw = (assigneeUsername || "").trim();
+  if (!raw) return true;
+
+  const a = raw.toLowerCase();
+  if (a === sess) return true;
+
+  const sessionUser = TEMP_USERS.find((t) => t.user.username.toLowerCase() === sess);
+  if (sessionUser && sessionUser.user.name.toLowerCase() === a) return true;
+
+  const assigneeUser = TEMP_USERS.find(
+    (t) => t.user.username.toLowerCase() === a || t.user.name.toLowerCase() === a
+  );
+  if (assigneeUser && assigneeUser.user.username.toLowerCase() === sess) return true;
+
+  return false;
+}

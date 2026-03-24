@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useTickets, useUpdateTicketStatus, useSyncTicketsNow } from "@/hooks/tickets";
 import { useUser } from "@/hooks/auth";
+import { assigneeMatchesSession } from "@/lib/mockAuth";
 import { Loader2, MoreVertical, Briefcase, Clock, Wrench, CheckCircle, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -67,8 +68,8 @@ export function TechnicianDashboard() {
   const allTickets = (tickets || []) as TicketRow[];
   const list = allTickets.filter((t) => {
     if (!user?.username) return true;
-    if (!t.assignee_username) return true;
-    return t.assignee_username.toLowerCase() === user.username.toLowerCase();
+    if (!t.assignee_username?.trim()) return true;
+    return assigneeMatchesSession(t.assignee_username, user.username);
   });
   const total = list.length;
   const pendientes = list.filter((t) => t.status === "Pendiente").length;
