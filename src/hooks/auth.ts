@@ -1,9 +1,11 @@
+import { useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   getStoredUser,
   setStoredUser,
   clearStoredUser,
   checkTempCredentials,
+  type MockUser,
 } from "@/lib/mockAuth";
 import {
   getCachedSessionUser,
@@ -11,23 +13,36 @@ import {
   clearCachedSessionUser,
 } from "@/lib/indexedDb";
 import { getCachedUserAccountByUsername } from "@/lib/indexedDb";
+import { removeTechnicianPresence, touchTechnicianPresence } from "@/lib/technicianPresence";
 
 export function useUser() {
   return useQuery({
     queryKey: ["user"],
     queryFn: async () => {
+      const tabUser = getStoredUser();
+      if (tabUser) return tabUser;
+
       const cachedSessionUser = await getCachedSessionUser();
       if (cachedSessionUser) {
         setStoredUser(cachedSessionUser);
         return cachedSessionUser;
       }
 
-      const stored = getStoredUser();
-      if (stored) return stored;
       throw new Error("No autenticado");
     },
     retry: false,
   });
+}
+
+/** Heartbeat para que la asignación automática de tickets vea a los técnicos con sesión activa (incluye varias pestañas). */
+export function useTechnicianPresence(user: MockUser | undefined) {
+  useEffect(() => {
+    if (!user || user.role !== "technician") return;
+    const username = user.username;
+    touchTechnicianPresence(username);
+    const id = window.setInterval(() => touchTechnicianPresence(username), 30_000);
+    return () => window.clearInterval(id);
+  }, [user?.username, user?.role]);
 }
 
 export function useLogin() {
@@ -66,7 +81,10 @@ export function useLogin() {
 
       throw new Error("Usuario o contraseña incorrectos");
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      if (data.user.role === "technician") {
+        touchTechnicianPresence(data.user.username);
+      }
       queryClient.invalidateQueries({ queryKey: ["user"] });
     },
   });
@@ -77,11 +95,17 @@ export function useLogout() {
 
   return useMutation({
     mutationFn: async () => {
+      const u = getStoredUser();
+      if (u?.role === "technician") {
+        removeTechnicianPresence(u.username);
+      }
       clearStoredUser();
       await clearCachedSessionUser();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["user"] });
+      // Evita datos obsoletos: si solo invalidamos, el caché puede seguir mostrando
+      // al usuario hasta terminar el refetch y Login hace `return null` → pantalla en blanco.
+      queryClient.removeQueries({ queryKey: ["user"] });
     },
   });
 }

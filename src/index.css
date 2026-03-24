@@ -7,10 +7,32 @@
     font-family: Inter, system-ui, sans-serif;
     color: #212529;
     background-color: #f5f8fa;
+    /* Evita zoom raro en orientación landscape en móviles */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  html {
+    overflow-x: hidden;
   }
   body {
     margin: 0;
     min-height: 100vh;
+    min-height: 100dvh;
     background-color: #f5f8fa;
+    overflow-x: hidden;
+    /* Safe area (notch / home indicator) */
+    padding-left: env(safe-area-inset-left, 0);
+    padding-right: env(safe-area-inset-right, 0);
+  }
+  #root {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+}
+
+@layer utilities {
+  /* Contenedor centrado en pantallas muy anchas (TV / ultrawide) */
+  .app-shell-wide {
+    @apply w-full max-w-[1920px] mx-auto;
   }
 }

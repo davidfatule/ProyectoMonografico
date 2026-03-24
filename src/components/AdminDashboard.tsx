@@ -191,8 +191,8 @@ export function AdminDashboard() {
         </div>
 
         {/* Gestión de Personal */}
-        <div className="p-6 bg-white rounded-xl shadow border border-slate-100">
-          <div className="flex items-center justify-between gap-4 mb-4">
+        <div className="p-4 sm:p-6 bg-white rounded-xl shadow border border-slate-100">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
             <div>
               <h3 className="font-semibold text-lg">Gestión de Personal</h3>
               <p className="text-sm text-slate-500">Usuarios del sistema (admin y soporte).</p>

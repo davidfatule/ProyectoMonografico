@@ -11,7 +11,7 @@ import {
   endOfMonth,
 } from "date-fns";
 import { es } from "date-fns/locale";
-import { Loader2, MoreVertical } from "lucide-react";
+import { Download, Loader2, MoreVertical } from "lucide-react";
 import { DashboardLayout } from "@/Layouts/DashboardLayout";
 import { useUser } from "@/hooks/auth";
 import { useTickets, useTicketByNumber, useUpdateTicket } from "@/hooks/tickets";
@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { ClientTypeCell } from "@/components/ClientTypeCell";
 
 type TicketRow = {
   id: number;
@@ -36,6 +37,10 @@ type TicketRow = {
   product?: string | null;
   description?: string | null;
   created_at: string;
+  assignee_username?: string | null;
+  support_comment?: string | null;
+  client_type?: string | null;
+  rnc?: string | null;
 };
 
 type DatePreset = "all" | "today" | "week" | "month" | "custom";
@@ -84,6 +89,131 @@ function filterByDatePreset(
     });
   }
   return true;
+}
+
+function getAssigneeDisplay(username: string | null | undefined): { primary: string; secondary?: string } {
+  if (!username?.trim()) return { primary: "Sin asignar" };
+  const normalized = username.trim().toLowerCase();
+  const match = TEMP_USERS.find((t) => t.user.username.toLowerCase() === normalized);
+  if (match) {
+    return { primary: match.user.name, secondary: match.user.username };
+  }
+  return { primary: username.trim() };
+}
+
+/** Mantiene el menú contextual dentro del viewport en móviles y TV de baja resolución. */
+function clampDropdownLeft(triggerRight: number, menuWidthPx: number): number {
+  const margin = 8;
+  const vw = typeof window !== "undefined" ? window.innerWidth : 400;
+  const preferred = triggerRight - menuWidthPx;
+  return Math.min(Math.max(margin, preferred), vw - menuWidthPx - margin);
+}
+
+function escapeCsvField(value: string): string {
+  const s = String(value ?? "");
+  if (/[",\n\r]/.test(s)) {
+    return `"${s.replace(/"/g, '""')}"`;
+  }
+  return s;
+}
+
+/** Exporta el listado visible (respeta filtros de fecha) como CSV para Excel. */
+function downloadTicketsCsv(rows: TicketRow[]): void {
+  const headers = [
+    "Ticket",
+    "Tipo cliente",
+    "RNC",
+    "Estado",
+    "Producto",
+    "Descripción",
+    "Asignado",
+    "Correo asignado",
+    "Comentario soporte",
+    "Fecha creado",
+  ];
+  const lines: string[] = [headers.map(escapeCsvField).join(",")];
+  for (const t of rows) {
+    const { primary, secondary } = getAssigneeDisplay(t.assignee_username);
+    const assigneeName = primary === "Sin asignar" ? "" : primary;
+    const assigneeEmail =
+      secondary ?? (t.assignee_username?.trim() ? t.assignee_username.trim() : "");
+    const dateStr = t.created_at
+      ? format(new Date(t.created_at), "dd MMM yyyy", { locale: es })
+      : "";
+    const tipoCliente =
+      t.client_type === "empresa"
+        ? "Empresa"
+        : t.client_type === "negocio"
+          ? "Negocio"
+          : t.client_type === "individual"
+            ? "Individual"
+            : "";
+    const rncCsv =
+      t.client_type === "empresa" || t.client_type === "negocio"
+        ? (t.rnc ?? "").trim()
+        : "";
+    lines.push(
+      [
+        escapeCsvField(t.ticket_number),
+        escapeCsvField(tipoCliente),
+        escapeCsvField(rncCsv),
+        escapeCsvField(t.status),
+        escapeCsvField(t.product && t.product !== "" ? String(t.product) : ""),
+        escapeCsvField(t.description != null ? String(t.description) : ""),
+        escapeCsvField(assigneeName),
+        escapeCsvField(assigneeEmail),
+        escapeCsvField(t.support_comment ?? ""),
+        escapeCsvField(dateStr),
+      ].join(",")
+    );
+  }
+  const blob = new Blob(["\ufeff" + lines.join("\r\n")], {
+    type: "text/csv;charset=utf-8;",
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `tickets_${format(new Date(), "yyyy-MM-dd_HHmm")}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function AssigneeCell({
+  username,
+  supportComment,
+  status,
+}: {
+  username: string | null | undefined;
+  supportComment: string | null | undefined;
+  status: string;
+}) {
+  const { primary, secondary } = getAssigneeDisplay(username);
+  const hint = [
+    username?.trim() ? `Asignado a: ${username.trim()}` : "Sin técnico asignado",
+    `Estado del ticket: ${status}`,
+    supportComment?.trim() ? `Comentario de soporte: ${supportComment.trim()}` : null,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  return (
+    <div className="min-w-[9rem] max-w-[14rem]" title={hint}>
+      <div className="flex flex-col gap-0.5">
+        <span
+          className={`font-medium truncate ${username?.trim() ? "text-slate-800" : "text-slate-400 italic"}`}
+        >
+          {primary}
+        </span>
+        {secondary && (
+          <span className="text-xs text-slate-500 truncate" title={secondary}>
+            {secondary}
+          </span>
+        )}
+      </div>
+    </div>
+  );
 }
 
 function StatusCell({ status }: { status: string }) {
@@ -413,15 +543,22 @@ export default function Tickets() {
       return;
     }
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    setMenuPosition({ top: rect.bottom + 4, left: rect.right - 192 });
+    const menuW = 208; /* w-52 */
+    setMenuPosition({ top: rect.bottom + 4, left: clampDropdownLeft(rect.right, menuW) });
     setOpenMenu(ticketNumber);
   };
 
   const closeEdit = () => setEditTicketNumber(null);
 
+  const isAdmin = user?.role === "admin";
+
+  useEffect(() => {
+    if (!isAdmin && editTicketNumber) setEditTicketNumber(null);
+  }, [isAdmin, editTicketNumber]);
+
   if (isUserLoading || !user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-dvh flex items-center justify-center bg-slate-50">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
@@ -437,9 +574,24 @@ export default function Tickets() {
 
   return (
     <DashboardLayout>
-      <div className="p-6 bg-white rounded-xl shadow border border-slate-100">
-        <h2 className="text-2xl font-bold mb-2">Tickets</h2>
-        <p className="text-slate-600 mb-4">Listado general de todos los tickets registrados.</p>
+      <div className="p-4 sm:p-6 bg-white rounded-xl shadow border border-slate-100">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4">
+          <div>
+            <h2 className="text-2xl font-bold mb-2">Tickets</h2>
+            <p className="text-slate-600 m-0">Listado general de todos los tickets registrados.</p>
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="group shrink-0 self-end sm:self-start inline-flex h-8 items-center gap-2 rounded-lg !border-slate-200/90 !bg-white px-3.5 text-xs font-medium !text-slate-800 shadow-[0_3px_14px_-3px_rgba(15,23,42,0.12),0_1px_6px_-2px_rgba(15,23,42,0.07)] transition-all duration-200 ease-out hover:-translate-y-0.5 hover:!border-[#347AFF]/45 hover:!bg-slate-50/90 hover:!text-[#2563EB] hover:shadow-[0_10px_28px_-8px_rgba(52,122,255,0.24),0_4px_12px_-6px_rgba(15,23,42,0.1)] active:translate-y-0 active:shadow-md disabled:pointer-events-none disabled:translate-y-0 disabled:opacity-45 disabled:shadow-[0_2px_6px_-2px_rgba(15,23,42,0.06)]"
+            disabled={isLoading || filteredList.length === 0}
+            onClick={() => downloadTicketsCsv(filteredList)}
+          >
+            <Download className="h-3.5 w-3.5 shrink-0 transition-transform duration-200 group-hover:scale-105" aria-hidden />
+            Descargar CSV
+          </Button>
+        </div>
 
         <div className="flex flex-col gap-4 mb-6">
           <div>
@@ -489,8 +641,10 @@ export default function Tickets() {
           )}
         </div>
 
-        <Dialog open={!!editTicketNumber} onOpenChange={(open) => !open && closeEdit()}>
-          {editTicketNumber && <TicketEditDialogContent ticketNumber={editTicketNumber} onClose={closeEdit} />}
+        <Dialog open={!!editTicketNumber && isAdmin} onOpenChange={(open) => !open && closeEdit()}>
+          {editTicketNumber && isAdmin && (
+            <TicketEditDialogContent ticketNumber={editTicketNumber} onClose={closeEdit} />
+          )}
         </Dialog>
 
         {isLoading && (
@@ -516,9 +670,11 @@ export default function Tickets() {
               <thead>
                 <tr className="border-b border-slate-200 text-left text-slate-500 uppercase tracking-wider">
                   <th className="pb-3 font-medium">Ticket</th>
+                  <th className="pb-3 font-medium">Cliente</th>
                   <th className="pb-3 font-medium">Estado</th>
                   <th className="pb-3 font-medium">Producto</th>
                   <th className="pb-3 font-medium">Descripción</th>
+                  <th className="pb-3 font-medium">Asignado / seguimiento</th>
                   <th className="pb-3 font-medium">Fecha creado</th>
                   <th className="pb-3 font-medium text-right">Acción</th>
                 </tr>
@@ -527,6 +683,9 @@ export default function Tickets() {
                 {filteredList.map((t) => (
                   <tr key={t.id} className="border-b border-slate-100 hover:bg-slate-50/50">
                     <td className="py-3 font-medium text-slate-900">{t.ticket_number}</td>
+                    <td className="py-3 align-top">
+                      <ClientTypeCell clientType={t.client_type} rnc={t.rnc} />
+                    </td>
                     <td className="py-3">
                       <StatusCell status={t.status} />
                     </td>
@@ -536,6 +695,13 @@ export default function Tickets() {
                       title={t.description != null ? String(t.description) : ""}
                     >
                       {t.description && t.description !== "" ? String(t.description) : "—"}
+                    </td>
+                    <td className="py-3 align-top">
+                      <AssigneeCell
+                        username={t.assignee_username}
+                        supportComment={t.support_comment}
+                        status={t.status}
+                      />
                     </td>
                     <td className="py-3 text-slate-500">
                       {t.created_at ? format(new Date(t.created_at), "dd MMM yyyy", { locale: es }) : "—"}
@@ -558,19 +724,21 @@ export default function Tickets() {
                                 className="fixed w-52 bg-white border border-slate-200 rounded-lg shadow-xl py-1 z-50 list-none m-0"
                                 style={{ top: menuPosition.top, left: menuPosition.left }}
                               >
-                                <li>
-                                  <button
-                                    type="button"
-                                    className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 border-0 bg-transparent cursor-pointer"
-                                    onClick={(ev) => {
-                                      ev.stopPropagation();
-                                      setOpenMenu(null);
-                                      setEditTicketNumber(t.ticket_number);
-                                    }}
-                                  >
-                                    Editar ticket
-                                  </button>
-                                </li>
+                                {isAdmin && (
+                                  <li>
+                                    <button
+                                      type="button"
+                                      className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 border-0 bg-transparent cursor-pointer"
+                                      onClick={(ev) => {
+                                        ev.stopPropagation();
+                                        setOpenMenu(null);
+                                        setEditTicketNumber(t.ticket_number);
+                                      }}
+                                    >
+                                      Editar ticket
+                                    </button>
+                                  </li>
+                                )}
                                 <li>
                                   <Link href={`/ticket/${t.ticket_number}/status`}>
                                     <a

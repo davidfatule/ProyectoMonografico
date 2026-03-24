@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,14 +12,32 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { api } from "@/api/endpoints";
 import { useCreateTicket } from "@/hooks/tickets";
+import type { DefaultValues } from "react-hook-form";
 
 const PRODUCTS = ["Router", "NVR", "XVR", "Camara CCTV", "Switch", "OLT", "ONUs", "UPS", "Fibra Optica", "Control de Acceso", "Control de Asistencia", "Rack", "Cable UTP"];
 const BRANCHES = ["Localidad Ozama - Principal", "KM-9", "Localidad Santiago", "Localidad Punta Cana"];
 
-
+const CLIENT_TYPE_OPTIONS = [
+  { value: "individual" as const, label: "Individual" },
+  { value: "negocio" as const, label: "Negocio" },
+  { value: "empresa" as const, label: "Empresa" },
+];
 
 const ticketCreateSchema = api.tickets.create.input;
 type FormValues = z.output<typeof ticketCreateSchema>;
+
+const emptyDefaults: DefaultValues<FormValues> = {
+  status: "Pendiente",
+  branch: "",
+  purchaseDate: "",
+  phone: "",
+  product: "",
+  serialNumber: "",
+  description: "",
+  taxCredit: "",
+  rnc: "",
+  fileUrl: "",
+};
 
 export default function NewTicket() {
   const [, setLocation] = useLocation();
@@ -30,19 +48,22 @@ export default function NewTicket() {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(ticketCreateSchema) as Resolver<FormValues>,
-    defaultValues: {
-      status: "Pendiente",
-      branch: "",
-      purchaseDate: "",
-      phone: "",
-      product: "",
-      serialNumber: "",
-      description: "",
-      taxCredit: "",
-      rnc: "",
-      fileUrl: "",
-    }
+    defaultValues: emptyDefaults,
   });
+
+  const clientType = form.watch("clientType");
+  const showFiscalFields = clientType === "empresa" || clientType === "negocio";
+
+  const setValue = form.setValue;
+  const clearErrors = form.clearErrors;
+  useEffect(() => {
+    if (clientType === "individual") {
+      setValue("taxCredit", "");
+      setValue("rnc", "");
+      clearErrors("taxCredit");
+      clearErrors("rnc");
+    }
+  }, [clientType, setValue, clearErrors]);
 
   const onSubmit = (data: FormValues) => {
     setSubmitError("");
@@ -64,22 +85,9 @@ export default function NewTicket() {
     }
   };
 
-  const defaultFormValues: FormValues = {
-    status: "Pendiente",
-    branch: "",
-    purchaseDate: "",
-    phone: "",
-    product: "",
-    serialNumber: "",
-    description: "",
-    taxCredit: "",
-    rnc: "",
-    fileUrl: "",
-  };
-
   const closeSuccessModal = () => {
     setSuccessTicketNumber(null);
-    form.reset(defaultFormValues);
+    form.reset(emptyDefaults);
     setSelectedFiles([]);
   };
 
@@ -119,7 +127,7 @@ export default function NewTicket() {
         </div>
       </Dialog>
 
-      <div className="max-w-3xl mx-auto px-4 py-12">
+      <div className="w-full app-shell-wide max-w-3xl mx-auto px-4 sm:px-6 py-10 sm:py-12 pb-[max(3rem,env(safe-area-inset-bottom))]">
         <div className="mb-8">
           <button
             type="button"
@@ -138,11 +146,40 @@ export default function NewTicket() {
           className="rounded-2xl bg-white p-6 sm:p-8 shadow-[0_4px_20px_rgba(0,0,0,0.08),0_2px_8px_rgba(0,0,0,0.04)] border border-slate-100/80"
           style={{ backgroundColor: "#ffffff" }}
         >
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
             {/* Información del Cliente / Compra */}
             <div>
-              <h3 className="text-base font-semibold border-b pb-1.5 mb-3">Detalles de Compra</h3>
-              <div className="grid sm:grid-cols-2 gap-4">
+              <h3 className="text-base font-semibold border-b pb-1 mb-2">Detalles de Compra</h3>
+
+              <div className="mb-3 space-y-1">
+                <Label className="text-sm font-medium text-slate-800">Compra registrada como *</Label>
+                <p className="text-[11px] leading-snug text-slate-500">
+                  Empresa o negocio requieren comprobante fiscal y RNC. Individual no aplica esos datos.
+                </p>
+                <div className="flex flex-wrap gap-1.5 pt-0.5">
+                  {CLIENT_TYPE_OPTIONS.map(({ value, label }) => {
+                    const active = clientType === value;
+                    return (
+                      <label
+                        key={value}
+                        className={`inline-flex cursor-pointer items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors ${
+                          active
+                            ? "border-[#347AFF] bg-[#347AFF]/10 text-[#347AFF] shadow-sm"
+                            : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+                        }`}
+                      >
+                        <input type="radio" value={value} className="sr-only" {...form.register("clientType")} />
+                        {label}
+                      </label>
+                    );
+                  })}
+                </div>
+                {form.formState.errors.clientType && (
+                  <p className="text-xs text-red-500">{form.formState.errors.clientType.message}</p>
+                )}
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-sm">Sucursal *</Label>
                   <select
@@ -165,15 +202,33 @@ export default function NewTicket() {
                     className={`h-9 text-sm ${form.formState.errors.purchaseDate ? "border-red-500" : ""}`}
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-sm">Comprobante Fiscal (Opcional)</Label>
-                  <Input placeholder="B01..." className="h-9 text-sm" {...form.register("taxCredit")} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-sm">RNC (Opcional)</Label>
-                  <Input placeholder="Ej. 130... o 101..." className="h-9 text-sm" {...form.register("rnc")} />
-                </div>
-                <div className="space-y-1.5">
+                {showFiscalFields && (
+                  <>
+                    <div className="space-y-1.5">
+                      <Label className="text-sm">Comprobante fiscal *</Label>
+                      <Input
+                        placeholder="B01..."
+                        className={`h-9 text-sm ${form.formState.errors.taxCredit ? "border-red-500" : ""}`}
+                        {...form.register("taxCredit")}
+                      />
+                      {form.formState.errors.taxCredit && (
+                        <p className="text-xs text-red-500">{form.formState.errors.taxCredit.message}</p>
+                      )}
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-sm">RNC *</Label>
+                      <Input
+                        placeholder="Ej. 130... o 101..."
+                        className={`h-9 text-sm ${form.formState.errors.rnc ? "border-red-500" : ""}`}
+                        {...form.register("rnc")}
+                      />
+                      {form.formState.errors.rnc && (
+                        <p className="text-xs text-red-500">{form.formState.errors.rnc.message}</p>
+                      )}
+                    </div>
+                  </>
+                )}
+                <div className={`space-y-1.5 ${!showFiscalFields ? "sm:col-span-2" : ""}`}>
                   <Label className="text-sm">Teléfono de Contacto *</Label>
                   <Input
                     placeholder="Ej. 809-123-4567"
@@ -186,8 +241,8 @@ export default function NewTicket() {
 
             {/* Información del Producto */}
             <div>
-              <h3 className="text-base font-semibold border-b pb-1.5 mb-3">Información del Equipo</h3>
-              <div className="grid sm:grid-cols-2 gap-4">
+              <h3 className="text-base font-semibold border-b pb-1 mb-2">Información del Equipo</h3>
+              <div className="grid sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-sm">Tipo de Producto *</Label>
                   <select

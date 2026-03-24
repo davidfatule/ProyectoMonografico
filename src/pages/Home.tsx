@@ -19,12 +19,12 @@ export default function Home() {
   return (
     <PublicLayout>
       <div
-        className="flex-1 flex flex-col justify-center max-w-4xl mx-auto px-5 sm:px-8 pt-6 pb-20"
+        className="flex-1 flex flex-col justify-center w-full app-shell-wide px-5 sm:px-8 pt-6 pb-20"
         style={{ backgroundColor: "#F5F8FA" }}
       >
         {/* Hero: título, subtítulo, botón + búsqueda */}
-        <div className="text-center max-w-2xl mx-auto mb-14">
-          <h1 className="text-3xl sm:text-4xl font-bold text-[#212529] leading-tight mb-4">
+        <div className="text-center max-w-2xl mx-auto mb-14 w-full">
+          <h1 className="text-2xl xs:text-3xl sm:text-4xl 3xl:text-5xl font-bold text-[#212529] leading-tight mb-4">
             Soporte técnico{" "}
             <span style={{ color: "#347AFF" }}>rápido y confiable</span>
           </h1>

@@ -1,6 +1,9 @@
+import { useEffect } from "react";
 import { Route, Switch } from "wouter";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
+import { deleteCachedTicketsByAssigneeEmail } from "@/lib/indexedDb";
+import { purgeMockTicketsByLegacyAssigneeEmail } from "@/lib/mockTickets";
 
 // Componentes globales
 import { Toaster } from "@/components/ui/toaster";
@@ -14,6 +17,23 @@ import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
 import Tickets from "@/pages/Tickets";
 import NotFound from "@/pages/not-found";
+
+const LEGACY_TECH_EMAIL = "tech@helpdesk.com";
+
+/** Una vez al cargar: borra tickets asignados al usuario técnico eliminado. */
+function LegacyTechTicketsPurge() {
+  const queryClient = useQueryClient();
+  useEffect(() => {
+    void (async () => {
+      const nDb = await deleteCachedTicketsByAssigneeEmail(LEGACY_TECH_EMAIL);
+      const nLs = purgeMockTicketsByLegacyAssigneeEmail(LEGACY_TECH_EMAIL);
+      if (nDb > 0 || nLs > 0) {
+        await queryClient.invalidateQueries({ queryKey: ["tickets"] });
+      }
+    })();
+  }, [queryClient]);
+  return null;
+}
 
 function Router() {
   return (
@@ -32,6 +52,7 @@ function Router() {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <LegacyTechTicketsPurge />
       <TooltipProvider>
         <Toaster />
         <Router />

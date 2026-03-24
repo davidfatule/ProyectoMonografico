@@ -8,6 +8,7 @@ import { es } from "date-fns/locale";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
+import { ClientTypeCell } from "@/components/ClientTypeCell";
 
 type TicketRow = {
   id: number;
@@ -17,17 +18,24 @@ type TicketRow = {
   description?: string | null;
   created_at: string;
   assignee_username?: string | null;
+  client_type?: string | null;
+  rnc?: string | null;
 };
 
 const STATUS_OPTIONS = [
-  { value: "Pendiente", label: "Marcar Pendiente" },
   { value: "En Proceso", label: "Iniciar Proceso" },
   { value: "Resuelto", label: "Resolver Ticket" },
-  { value: "Rechazado", label: "Rechazar" },
   { value: "Descartado", label: "Ticket Descartado" },
 ];
-const STATUSES_REQUIRING_COMMENT = new Set(["Resuelto", "Rechazado", "Descartado"]);
+const STATUSES_REQUIRING_COMMENT = new Set(["Resuelto", "Descartado"]);
 type PendingCommentAction = { ticketNumber: string; status: string } | null;
+
+function clampDropdownLeft(triggerRight: number, menuWidthPx: number): number {
+  const margin = 8;
+  const vw = typeof window !== "undefined" ? window.innerWidth : 400;
+  const preferred = triggerRight - menuWidthPx;
+  return Math.min(Math.max(margin, preferred), vw - menuWidthPx - margin);
+}
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
@@ -74,7 +82,8 @@ export function TechnicianDashboard() {
       return;
     }
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    setMenuPosition({ top: rect.bottom + 4, left: rect.right - 192 });
+    const menuW = 192; /* w-48 */
+    setMenuPosition({ top: rect.bottom + 4, left: clampDropdownLeft(rect.right, menuW) });
     setOpenMenu(ticketNumber);
   };
 
@@ -238,7 +247,7 @@ export function TechnicianDashboard() {
       </div>
 
       {/* Tabla Mis Tickets Asignados */}
-      <div className="p-6 bg-white rounded-xl shadow border border-slate-100">
+      <div className="p-4 sm:p-6 bg-white rounded-xl shadow border border-slate-100">
         <h3 className="font-semibold text-lg mb-1">Mis Tickets Asignados</h3>
         <p className="text-sm text-slate-500 mb-4">Listado de tickets y acciones</p>
         {isLoading && (
@@ -259,6 +268,7 @@ export function TechnicianDashboard() {
               <thead>
                 <tr className="border-b border-slate-200 text-left text-slate-500 uppercase tracking-wider">
                   <th className="pb-3 font-medium">Ticket</th>
+                  <th className="pb-3 font-medium">Cliente</th>
                   <th className="pb-3 font-medium">Estado</th>
                   <th className="pb-3 font-medium">Producto</th>
                   <th className="pb-3 font-medium">Descripción</th>
@@ -270,6 +280,9 @@ export function TechnicianDashboard() {
                 {list.map((t) => (
                   <tr key={t.id} className="border-b border-slate-100 hover:bg-slate-50/50">
                     <td className="py-3 font-medium text-slate-900">{t.ticket_number}</td>
+                    <td className="py-3 align-top">
+                      <ClientTypeCell clientType={t.client_type} rnc={t.rnc} />
+                    </td>
                     <td className="py-3">
                       <StatusBadge status={t.status} />
                     </td>

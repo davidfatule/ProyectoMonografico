@@ -1,4 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getFirstTechnicianUsername } from "@/lib/mockAuth";
+import { getNextTechnicianAssigneeUsername } from "@/lib/technicianPresence";
 import { getMockTicketByNumber } from "@/lib/mockTickets";
 import {
   getCachedTickets,
@@ -17,6 +19,7 @@ type LocalTicket = {
   id: number;
   ticketNumber: string;
   status: string;
+  clientType?: "empresa" | "negocio" | "individual";
   branch: string;
   purchaseDate: string;
   phone: string;
@@ -42,10 +45,17 @@ function toLocalTicket(ticket: CachedTicket): LocalTicket {
         ? ticket.created_at
         : new Date().toISOString();
 
+  const rawClientType = ticket.clientType;
+  const clientType =
+    rawClientType === "empresa" || rawClientType === "negocio" || rawClientType === "individual"
+      ? rawClientType
+      : undefined;
+
   return {
     id,
     ticketNumber,
     status: typeof ticket.status === "string" ? ticket.status : "Pendiente",
+    clientType,
     branch: typeof ticket.branch === "string" ? ticket.branch : "",
     purchaseDate:
       typeof ticket.purchaseDate === "string"
@@ -69,7 +79,7 @@ function toLocalTicket(ticket: CachedTicket): LocalTicket {
     assignee:
       ticket.assignee && typeof ticket.assignee === "object"
         ? (ticket.assignee as { username: string })
-        : { username: "tech@helpdesk.com" },
+        : { username: getFirstTechnicianUsername() },
     evaluation:
       ticket.evaluation && typeof ticket.evaluation === "object"
         ? (ticket.evaluation as { rating: number; comment?: string })
@@ -90,7 +100,21 @@ function toDashboardRow(ticket: LocalTicket) {
     created_at: ticket.createdAt,
     assignee_username: ticket.assignee?.username ?? null,
     support_comment: ticket.supportComment ?? null,
+    client_type: ticket.clientType ?? null,
+    rnc: ticket.rnc ?? null,
   };
+}
+
+/** Más reciente primero (orden de llegada). */
+function sortTicketsNewestFirst<T extends { created_at: string }>(rows: T[]): T[] {
+  return [...rows].sort((a, b) => {
+    const ta = new Date(a.created_at).getTime();
+    const tb = new Date(b.created_at).getTime();
+    if (Number.isNaN(ta) && Number.isNaN(tb)) return 0;
+    if (Number.isNaN(ta)) return 1;
+    if (Number.isNaN(tb)) return -1;
+    return tb - ta;
+  });
 }
 
 function generateTicketNumber() {
@@ -105,7 +129,7 @@ export function useTickets() {
     queryKey: ["tickets"],
     queryFn: async () => {
       const cached = await getCachedTickets();
-      return cached.map((ticket) => toDashboardRow(toLocalTicket(ticket)));
+      return sortTicketsNewestFirst(cached.map((ticket) => toDashboardRow(toLocalTicket(ticket))));
     },
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
@@ -119,7 +143,7 @@ export function useSyncTicketsNow() {
   return useMutation({
     mutationFn: async () => {
       const cached = await getCachedTickets();
-      return cached.map((ticket) => toDashboardRow(toLocalTicket(ticket)));
+      return sortTicketsNewestFirst(cached.map((ticket) => toDashboardRow(toLocalTicket(ticket))));
     },
     onSuccess: (data) => {
       queryClient.setQueryData(["tickets"], data);
@@ -137,21 +161,33 @@ export function useCreateTicket() {
       const ticketNumber = generateTicketNumber();
       const createdAt = new Date().toISOString();
 
+      const clientTypeRaw = data.clientType;
+      const clientType =
+        clientTypeRaw === "empresa" || clientTypeRaw === "negocio" || clientTypeRaw === "individual"
+          ? clientTypeRaw
+          : undefined;
+      const isIndividual = clientType === "individual";
+
       const localTicket: LocalTicket = {
         id: nextId,
         ticketNumber,
         status: typeof data.status === "string" ? data.status : "Pendiente",
+        clientType,
         branch: typeof data.branch === "string" ? data.branch : "",
         purchaseDate: typeof data.purchaseDate === "string" ? data.purchaseDate : "",
         phone: typeof data.phone === "string" ? data.phone : "",
         product: typeof data.product === "string" ? data.product : "",
         serialNumber: typeof data.serialNumber === "string" ? data.serialNumber : "",
         description: typeof data.description === "string" ? data.description : "",
-        taxCredit: typeof data.taxCredit === "string" ? data.taxCredit : undefined,
-        rnc: typeof data.rnc === "string" ? data.rnc : undefined,
+        taxCredit: isIndividual
+          ? undefined
+          : typeof data.taxCredit === "string"
+            ? data.taxCredit.trim() || undefined
+            : undefined,
+        rnc: isIndividual ? undefined : typeof data.rnc === "string" ? data.rnc.trim() || undefined : undefined,
         fileUrl: typeof data.fileUrl === "string" ? data.fileUrl : undefined,
         createdAt,
-        assignee: { username: "tech@helpdesk.com" },
+        assignee: { username: getNextTechnicianAssigneeUsername() },
         evaluation: null,
         supportComment: undefined,
       };

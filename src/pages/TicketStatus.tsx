@@ -59,7 +59,7 @@ export default function TicketStatus() {
   if (isLoading) {
     return (
       <PublicLayout>
-        <div className="max-w-4xl mx-auto px-4 py-12">
+        <div className="w-full app-shell-wide max-w-4xl mx-auto px-4 sm:px-6 py-12">
           <Skeleton className="h-12 w-64 mb-8" />
           <Skeleton className="h-96 w-full rounded-3xl" />
         </div>
@@ -92,17 +92,17 @@ export default function TicketStatus() {
 
   return (
     <PublicLayout>
-      <div className="max-w-4xl mx-auto px-4 py-10">
+      <div className="w-full app-shell-wide max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-10 pb-[max(2.5rem,env(safe-area-inset-bottom))]">
         {/* Estado de Solicitud */}
-        <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
-          <div>
+        <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-start sm:justify-between gap-4 mb-6">
+          <div className="min-w-0">
             <h2 className="text-sm font-semibold text-slate-600 uppercase tracking-wide mb-1">Estado de Solicitud</h2>
-            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-3 flex-wrap">
+            <h1 className="text-xl xs:text-2xl sm:text-3xl 3xl:text-4xl font-bold text-slate-900 flex items-center gap-3 flex-wrap break-words">
               {ticket.ticketNumber}
-              {isRejected && <Badge variant="destructive" className="text-sm">Rechazado</Badge>}
+              {isRejected && <Badge variant="destructive" className="text-sm shrink-0">Rechazado</Badge>}
             </h1>
           </div>
-          <div className="text-right">
+          <div className="text-left sm:text-right shrink-0">
             <p className="text-sm text-slate-500">Fecha de creación</p>
             <p className="font-medium text-slate-800">{ticket.createdAt ? format(new Date(ticket.createdAt), "dd MMM yyyy", { locale: es }) : '-'}</p>
           </div>
@@ -155,7 +155,7 @@ export default function TicketStatus() {
           <div className="md:col-span-2 space-y-6">
             <div className={cardClass}>
               <h3 className="font-semibold text-lg text-slate-900 border-b border-slate-100 pb-3 mb-4">Detalles del Equipo</h3>
-              <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+              <div className="grid grid-cols-1 xs:grid-cols-2 gap-x-6 sm:gap-x-8 gap-y-4">
                 <div>
                   <p className="text-sm text-slate-500">Producto</p>
                   <p className="font-medium text-slate-800">{ticket.product}</p>

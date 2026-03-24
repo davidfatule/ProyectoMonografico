@@ -63,3 +63,14 @@ export function getMockTicketByNumber(ticketNumber: string): MockTicket | null {
   const tickets = getStoredTickets();
   return tickets.find((t) => t.ticketNumber === ticketNumber) ?? null;
 }
+
+/** Elimina tickets legacy en localStorage asignados al técnico antiguo (misma lógica que IndexedDB). */
+export function purgeMockTicketsByLegacyAssigneeEmail(email: string): number {
+  const target = (email || "").trim().toLowerCase();
+  if (!target) return 0;
+  const tickets = getStoredTickets();
+  const kept = tickets.filter((t) => (t.assignee?.username || "").trim().toLowerCase() !== target);
+  const removed = tickets.length - kept.length;
+  if (removed > 0) setStoredTickets(kept);
+  return removed;
+}
