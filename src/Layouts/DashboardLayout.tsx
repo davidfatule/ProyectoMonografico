@@ -11,6 +11,7 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -54,7 +55,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors touch-manipulation ${
             isActive("/dashboard")
               ? "bg-primary/10 text-primary"
-              : "text-slate-600 hover:bg-slate-100"
+              : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
           }`}
         >
           <LayoutDashboard className="w-5 h-5 shrink-0" />
@@ -68,7 +69,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors touch-manipulation ${
               isActive("/tickets")
                 ? "bg-primary/10 text-primary"
-                : "text-slate-600 hover:bg-slate-100"
+                : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
             }`}
           >
             <Ticket className="w-5 h-5 shrink-0" />
@@ -77,7 +78,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </Link>
       )}
       {!isTechnician && !isAdmin && (
-        <span className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400">
+        <span className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-slate-400 dark:text-slate-500">
           <Ticket className="w-5 h-5 shrink-0" />
           Tickets
         </span>
@@ -86,56 +87,59 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   );
 
   return (
-    <div className="min-h-screen min-h-dvh flex bg-slate-50">
+    <div className="min-h-screen min-h-dvh flex bg-slate-50 dark:bg-slate-950">
       {mobileNavOpen && (
         <button
           type="button"
-          className="fixed inset-0 z-40 bg-slate-900/50 lg:hidden touch-manipulation"
+          className="fixed inset-0 z-40 bg-slate-900/50 dark:bg-black/60 lg:hidden touch-manipulation"
           aria-label="Cerrar menú"
           onClick={closeMobileNav}
         />
       )}
 
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-50 w-[min(18rem,88vw)] shrink-0 bg-white border-r border-slate-200 flex flex-col min-h-0 lg:min-h-screen transition-transform duration-200 ease-out lg:translate-x-0 ${
+        className={`fixed lg:static inset-y-0 left-0 z-50 w-[min(18rem,88vw)] shrink-0 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 flex flex-col min-h-0 lg:min-h-screen transition-transform duration-200 ease-out lg:translate-x-0 ${
           mobileNavOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
       >
-        <div className="p-4 sm:p-5 border-b border-slate-100">
+        <div className="p-4 sm:p-5 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center justify-between gap-2">
-            <Link href="/dashboard" className="flex min-w-0 items-center gap-2.5 no-underline" onClick={closeMobileNav}>
+            <Link href="/dashboard" className="flex min-w-0 flex-1 items-center gap-2.5 no-underline" onClick={closeMobileNav}>
               <div
                 className="w-9 h-9 shrink-0 rounded-lg flex items-center justify-center"
                 style={{ backgroundColor: "#347AFF" }}
               >
                 <Headphones className="w-5 h-5 text-white" />
               </div>
-              <span className="font-semibold text-slate-800 truncate text-sm sm:text-base">Andrickson Soporte</span>
+              <span className="font-semibold text-slate-800 dark:text-slate-100 truncate text-sm sm:text-base">Andrickson Soporte</span>
             </Link>
-            <button
-              type="button"
-              className="lg:hidden rounded-lg p-2 text-slate-600 hover:bg-slate-100 touch-manipulation"
-              aria-label="Cerrar menú"
-              onClick={closeMobileNav}
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <div className="flex items-center gap-0.5 shrink-0">
+              <ThemeToggle />
+              <button
+                type="button"
+                className="lg:hidden rounded-lg p-2 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 touch-manipulation"
+                aria-label="Cerrar menú"
+                onClick={closeMobileNav}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         </div>
 
         <nav className="p-4 flex-1 overflow-y-auto">
-          <p className="text-xs font-medium text-slate-400 uppercase tracking-wider px-3 mb-3">Menú principal</p>
+          <p className="text-xs font-medium text-slate-400 dark:text-slate-500 uppercase tracking-wider px-3 mb-3">Menú principal</p>
           <div className="space-y-1">{navLinks}</div>
         </nav>
 
-        <div className="p-4 border-t border-slate-100 mt-auto pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div className="p-4 border-t border-slate-100 dark:border-slate-800 mt-auto pb-[max(1rem,env(safe-area-inset-bottom))]">
           <div className="flex items-center gap-3 mb-3 min-w-0">
-            <div className="w-10 h-10 shrink-0 rounded-full bg-slate-200 flex items-center justify-center">
-              <UserIcon className="w-5 h-5 text-slate-500" />
+            <div className="w-10 h-10 shrink-0 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+              <UserIcon className="w-5 h-5 text-slate-500 dark:text-slate-400" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-slate-800 truncate">{userEmail || user?.username || "Usuario"}</p>
-              <p className="text-xs text-slate-500 truncate">{roleLabel}</p>
+              <p className="text-sm font-medium text-slate-800 dark:text-slate-100 truncate">{userEmail || user?.username || "Usuario"}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 truncate">{roleLabel}</p>
             </div>
           </div>
           <button
@@ -147,7 +151,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               });
             }}
             disabled={logout.isPending}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50 touch-manipulation min-h-[44px]"
+            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 touch-manipulation min-h-[44px]"
           >
             <LogOut className="w-4 h-4 shrink-0" />
             {logout.isPending ? "Cerrando..." : "Cerrar sesión"}
@@ -156,16 +160,17 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col lg:min-h-screen">
-        <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-slate-200 bg-white px-4 py-3 lg:hidden pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 lg:hidden pt-[max(0.75rem,env(safe-area-inset-top))]">
           <button
             type="button"
-            className="rounded-lg p-2 text-slate-700 hover:bg-slate-100 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+            className="rounded-lg p-2 text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
             aria-label="Abrir menú"
             onClick={() => setMobileNavOpen(true)}
           >
             <Menu className="w-6 h-6" />
           </button>
-          <span className="min-w-0 truncate font-semibold text-slate-800">Andrickson Soporte</span>
+          <span className="min-w-0 flex-1 truncate font-semibold text-slate-800 dark:text-slate-100">Andrickson Soporte</span>
+          <ThemeToggle />
         </header>
 
         <main className="app-shell-wide flex-1 overflow-x-auto overflow-y-auto p-4 sm:p-6 lg:p-8 w-full min-h-0">

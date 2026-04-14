@@ -28,7 +28,7 @@ export function StarRating({ rating, onRatingChange, readOnly = false }: StarRat
           key={star}
           onClick={() => !readOnly && onRatingChange?.(star)}
           disabled={readOnly}
-          className={star <= rating ? "text-yellow-500" : "text-gray-300"}
+          className={star <= rating ? "text-yellow-500" : "text-gray-300 dark:text-slate-600"}
         >
           ★
         </button>

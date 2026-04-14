@@ -21,6 +21,7 @@ export const ticketInputSchema = z
     branch: z.string().min(1, "La sucursal es requerida"),
     purchaseDate: z.string().min(1, "La fecha de compra es requerida"),
     phone: z.string().min(1, "El teléfono es requerido"),
+    email: z.string().min(1, "El correo electrónico es requerido").email("Introduce un correo válido"),
     product: z.string().min(1, "El producto es requerido"),
     serialNumber: z.string().min(1, "El número de serie es requerido"),
     description: z.string().min(1, "La descripción es requerida"),

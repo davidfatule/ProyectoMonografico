@@ -26,6 +26,11 @@ const emptyUserForm: UserFormState = {
   active: true,
 };
 
+const dashCard =
+  "rounded-xl border border-slate-100/80 bg-white shadow dark:border-slate-700 dark:bg-slate-900 dark:shadow-[0_4px_24px_rgba(0,0,0,0.35)]";
+const dashSelect =
+  "h-9 w-full rounded-md border border-slate-200 bg-white px-2.5 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100";
+
 function avgRating(evaluations: { rating: number }[]) {
   if (evaluations.length === 0) return 0;
   const sum = evaluations.reduce((acc, e) => acc + e.rating, 0);
@@ -139,63 +144,63 @@ export function AdminDashboard() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-2">Panel de Administración</h2>
-      <p className="text-slate-600 mb-6">Gestión de personal, métricas y satisfacción del servicio.</p>
+      <h2 className="mb-2 text-2xl font-bold text-slate-900 dark:text-slate-100">Panel de Administración</h2>
+      <p className="mb-6 text-slate-600 dark:text-slate-400">Gestión de personal, métricas y satisfacción del servicio.</p>
 
         {/* Resumen */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="p-5 bg-white rounded-xl shadow border border-slate-100">
+        <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className={`${dashCard} p-5`}>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                <Ticket className="w-5 h-5 text-blue-700" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-950/50">
+                <Ticket className="h-5 w-5 text-blue-700 dark:text-blue-300" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-slate-900">{totalTickets}</p>
-                <p className="text-sm text-slate-500">Total Tickets</p>
+                <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{totalTickets}</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Total Tickets</p>
               </div>
             </div>
           </div>
-          <div className="p-5 bg-white rounded-xl shadow border border-slate-100">
+          <div className={`${dashCard} p-5`}>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                <Users className="w-5 h-5 text-emerald-700" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-950/50">
+                <Users className="h-5 w-5 text-emerald-700 dark:text-emerald-300" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-slate-900">{activeTechniciansCount}</p>
-                <p className="text-sm text-slate-500">Técnicos Activos</p>
+                <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{activeTechniciansCount}</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Técnicos Activos</p>
               </div>
             </div>
           </div>
-          <div className="p-5 bg-white rounded-xl shadow border border-slate-100">
+          <div className={`${dashCard} p-5`}>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-                <Star className="w-5 h-5 text-amber-700" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-950/50">
+                <Star className="h-5 w-5 text-amber-700 dark:text-amber-300" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-slate-900">{avg.toFixed(1)}/5</p>
-                <p className="text-sm text-slate-500">Satisfacción</p>
+                <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{avg.toFixed(1)}/5</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Satisfacción</p>
               </div>
             </div>
           </div>
-          <div className="p-5 bg-white rounded-xl shadow border border-slate-100">
+          <div className={`${dashCard} p-5`}>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center">
-                <Clock className="w-5 h-5 text-slate-700" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800">
+                <Clock className="h-5 w-5 text-slate-700 dark:text-slate-300" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-slate-900">{openedTodayCount}</p>
-                <p className="text-sm text-slate-500">Tickets Abiertos Hoy</p>
+                <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{openedTodayCount}</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Tickets Abiertos Hoy</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Gestión de Personal */}
-        <div className="p-4 sm:p-6 bg-white rounded-xl shadow border border-slate-100">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
+        <div className={`${dashCard} p-4 sm:p-6`}>
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h3 className="font-semibold text-lg">Gestión de Personal</h3>
-              <p className="text-sm text-slate-500">Usuarios del sistema (admin y soporte).</p>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Gestión de Personal</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400">Usuarios del sistema (admin y soporte).</p>
             </div>
             <Button
               type="button"
@@ -212,7 +217,7 @@ export function AdminDashboard() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-left text-slate-500 uppercase tracking-wider">
+                <tr className="border-b border-slate-200 text-left uppercase tracking-wider text-slate-500 dark:border-slate-600 dark:text-slate-400">
                   <th className="pb-3 font-medium">Usuario</th>
                   <th className="pb-3 font-medium">Rol</th>
                   <th className="pb-3 font-medium">Estado</th>
@@ -221,13 +226,13 @@ export function AdminDashboard() {
               </thead>
               <tbody>
                 {(users ?? []).map((u) => (
-                  <tr key={u.username} className="border-b border-slate-100 last:border-0">
+                  <tr key={u.username} className="border-b border-slate-100 last:border-0 dark:border-slate-700">
                     <td className="py-3">
-                      <div className="font-medium text-slate-900">{u.username}</div>
-                      <div className="text-xs text-slate-500">{u.name}</div>
+                      <div className="font-medium text-slate-900 dark:text-slate-100">{u.username}</div>
+                      <div className="text-xs text-slate-500 dark:text-slate-400">{u.name}</div>
                     </td>
                     <td className="py-3">
-                      <span className="text-slate-700">{u.role}</span>
+                      <span className="text-slate-700 dark:text-slate-300">{u.role}</span>
                     </td>
                     <td className="py-3">
                       <Badge variant={u.active ? "success" : "destructive"} color="primary" className="bg-opacity-70">
@@ -248,7 +253,7 @@ export function AdminDashboard() {
                 ))}
                 {(users ?? []).length === 0 && (
                   <tr>
-                    <td className="py-6 text-center text-slate-500" colSpan={4}>
+                    <td className="py-6 text-center text-slate-500 dark:text-slate-400" colSpan={4}>
                       No hay usuarios registrados.
                     </td>
                   </tr>
@@ -313,7 +318,7 @@ export function AdminDashboard() {
                   <select
                     value={userForm.role}
                     onChange={(e) => setUserForm((f) => ({ ...f, role: e.target.value as "admin" | "technician" }))}
-                    className="w-full h-9 text-sm rounded-md border border-slate-200 bg-white px-2.5"
+                    className={dashSelect}
                   >
                     <option value="admin">admin</option>
                     <option value="technician">technician</option>
@@ -324,7 +329,7 @@ export function AdminDashboard() {
                   <select
                     value={userForm.active ? "active" : "inactive"}
                     onChange={(e) => setUserForm((f) => ({ ...f, active: e.target.value === "active" }))}
-                    className="w-full h-9 text-sm rounded-md border border-slate-200 bg-white px-2.5"
+                    className={dashSelect}
                   >
                     <option value="active">Activo</option>
                     <option value="inactive">Inactivo</option>
@@ -332,7 +337,7 @@ export function AdminDashboard() {
                 </div>
               </div>
 
-              {userFormError && <p className="text-sm text-red-500">{userFormError}</p>}
+              {userFormError && <p className="text-sm text-red-500 dark:text-red-400">{userFormError}</p>}
             </div>
 
             <DialogFooter>

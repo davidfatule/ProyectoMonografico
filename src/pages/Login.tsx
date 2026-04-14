@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { HeadphonesIcon, Lock, User, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { api } from "@/api/endpoints";
 import { useLogin, useUser } from "@/hooks/auth";
 
@@ -12,7 +13,7 @@ type LoginForm = z.infer<typeof api.auth.login.input>;
 
 /** Estilo compartido: campos con ligera elevación y foco suave */
 const floatingInputClass =
-  "h-12 w-full rounded-[14px] border border-slate-200/95 bg-slate-50 pl-10 pr-3 text-slate-900 shadow-[0_2px_10px_-3px_rgba(15,23,42,0.08),0_1px_4px_-2px_rgba(15,23,42,0.05)] transition-all duration-200 placeholder:text-slate-400 focus:border-[#347AFF]/55 focus:bg-white focus:outline-none focus:ring-[3px] focus:ring-[#347AFF]/18 hover:border-slate-300 hover:shadow-[0_6px_20px_-6px_rgba(15,23,42,0.12)]";
+  "h-12 w-full rounded-[14px] border border-slate-200/95 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/80 pl-10 pr-3 text-slate-900 dark:text-slate-100 shadow-[0_2px_10px_-3px_rgba(15,23,42,0.08),0_1px_4px_-2px_rgba(15,23,42,0.05)] transition-all duration-200 placeholder:text-slate-400 focus:border-[#347AFF]/55 focus:bg-white dark:focus:bg-slate-900 focus:outline-none focus:ring-[3px] focus:ring-[#347AFF]/18 hover:border-slate-300 dark:hover:border-slate-500 hover:shadow-[0_6px_20px_-6px_rgba(15,23,42,0.12)]";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -51,10 +52,10 @@ export default function Login() {
 
   // Mientras carga la sesión local, mostrar formulario.
   return (
-    <div className="min-h-dvh flex bg-[#F5F8FA] relative">
+    <div className="min-h-dvh flex bg-[#F5F8FA] dark:bg-slate-950 relative">
       <Link
         href="/"
-        className="fixed z-10 inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 no-underline text-sm font-medium bg-white/90 backdrop-blur-sm py-2 px-3 rounded-lg border border-slate-200/80 shadow-sm touch-manipulation min-h-[44px]"
+        className="fixed z-10 inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-slate-100 no-underline text-sm font-medium bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm py-2 px-3 rounded-lg border border-slate-200/80 dark:border-slate-700 shadow-sm touch-manipulation min-h-[44px]"
         style={{
           top: "max(1rem, env(safe-area-inset-top, 0px))",
           left: "max(1rem, env(safe-area-inset-left, 0px))",
@@ -63,26 +64,35 @@ export default function Login() {
         <ArrowLeft className="w-4 h-4" />
         Volver al inicio
       </Link>
+      <div
+        className="fixed z-10"
+        style={{
+          top: "max(1rem, env(safe-area-inset-top, 0px))",
+          right: "max(1rem, env(safe-area-inset-right, 0px))",
+        }}
+      >
+        <ThemeToggle />
+      </div>
       <div className="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:flex-none lg:px-20 xl:px-24">
         <div className="mx-auto w-full max-w-sm lg:w-96">
           <div className="flex items-center gap-2 mb-8">
             <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/25">
               <HeadphonesIcon className="w-6 h-6 text-white" />
             </div>
-            <span className="font-display font-bold text-2xl text-slate-900">Andrickson Soporte<span className="text-primary"></span></span>
+            <span className="font-display font-bold text-2xl text-slate-900 dark:text-slate-100">Andrickson Soporte<span className="text-primary"></span></span>
           </div>
 
-          <h2 className="text-3xl font-display font-bold text-slate-900 mb-2">Bienvenido de nuevo</h2>
-          <p className="text-slate-500 mb-8">Inicia sesión en el portal de empleados para continuar.</p>
+          <h2 className="text-3xl font-display font-bold text-slate-900 dark:text-slate-100 mb-2">Bienvenido de nuevo</h2>
+          <p className="text-slate-500 dark:text-slate-400 mb-8">Inicia sesión en el portal de empleados para continuar.</p>
 
-          <div className="rounded-[28px] border border-slate-100/90 bg-white p-9 sm:p-10 shadow-[0_22px_56px_-18px_rgba(15,23,42,0.14),0_10px_28px_-12px_rgba(15,23,42,0.08),0_2px_8px_-2px_rgba(15,23,42,0.04)]">
+          <div className="rounded-[28px] border border-slate-100/90 dark:border-slate-800 bg-white dark:bg-slate-900 p-9 sm:p-10 shadow-[0_22px_56px_-18px_rgba(15,23,42,0.14),0_10px_28px_-12px_rgba(15,23,42,0.08),0_2px_8px_-2px_rgba(15,23,42,0.04)] dark:shadow-[0_22px_56px_-18px_rgba(0,0,0,0.45),0_10px_28px_-12px_rgba(0,0,0,0.25)]">
             <form
               onSubmit={handleFormSubmit}
               className="space-y-6"
               noValidate
             >
               <div>
-                <label className="mb-2.5 block text-sm font-semibold tracking-tight text-slate-800">
+                <label className="mb-2.5 block text-sm font-semibold tracking-tight text-slate-800 dark:text-slate-200">
                   Usuario
                 </label>
                 <div className="relative">
@@ -100,7 +110,7 @@ export default function Login() {
               </div>
 
               <div>
-                <label className="mb-2.5 block text-sm font-semibold tracking-tight text-slate-800">
+                <label className="mb-2.5 block text-sm font-semibold tracking-tight text-slate-800 dark:text-slate-200">
                   Contraseña
                 </label>
                 <div className="relative">
@@ -117,7 +127,7 @@ export default function Login() {
                   <button
                     type="button"
                     onClick={() => setShowPassword((v) => !v)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 transition-colors hover:text-slate-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#347AFF]/30 focus-visible:ring-offset-2 rounded-r-[14px]"
+                    className="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 transition-colors hover:text-slate-600 dark:hover:text-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#347AFF]/30 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900 rounded-r-[14px]"
                     aria-label={showPassword ? "Ocultar contraseña" : "Ver contraseña"}
                   >
                     {showPassword ? (
@@ -130,7 +140,7 @@ export default function Login() {
               </div>
 
               {(errorMsg || Object.keys(form.formState.errors).length > 0) && (
-                <div className="rounded-[14px] border border-red-100 bg-red-50/90 p-3.5 text-sm text-red-600 shadow-sm">
+                <div className="rounded-[14px] border border-red-100 dark:border-red-900/50 bg-red-50/90 dark:bg-red-950/40 p-3.5 text-sm text-red-600 dark:text-red-400 shadow-sm">
                   {errorMsg ||
                     (form.formState.errors.username?.message as string) ||
                     (form.formState.errors.password?.message as string) ||

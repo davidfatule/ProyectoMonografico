@@ -13,6 +13,7 @@ export interface MockTicket {
   branch: string;
   purchaseDate: string;
   phone: string;
+  email?: string;
   product: string;
   serialNumber: string;
   description: string;

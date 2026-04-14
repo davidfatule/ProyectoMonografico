@@ -23,6 +23,7 @@ type LocalTicket = {
   branch: string;
   purchaseDate: string;
   phone: string;
+  email: string;
   product: string;
   serialNumber: string;
   description: string;
@@ -64,6 +65,7 @@ function toLocalTicket(ticket: CachedTicket): LocalTicket {
           ? ticket.purchase_date
           : "",
     phone: typeof ticket.phone === "string" ? ticket.phone : "",
+    email: typeof ticket.email === "string" ? ticket.email : "",
     product: typeof ticket.product === "string" ? ticket.product : "",
     serialNumber:
       typeof ticket.serialNumber === "string"
@@ -176,6 +178,7 @@ export function useCreateTicket() {
         branch: typeof data.branch === "string" ? data.branch : "",
         purchaseDate: typeof data.purchaseDate === "string" ? data.purchaseDate : "",
         phone: typeof data.phone === "string" ? data.phone : "",
+        email: typeof data.email === "string" ? data.email.trim() : "",
         product: typeof data.product === "string" ? data.product : "",
         serialNumber: typeof data.serialNumber === "string" ? data.serialNumber : "",
         description: typeof data.description === "string" ? data.description : "",
@@ -254,6 +257,7 @@ export type TicketUpdatePayload = Partial<
     | "branch"
     | "purchaseDate"
     | "phone"
+    | "email"
     | "product"
     | "serialNumber"
     | "description"

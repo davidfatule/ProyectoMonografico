@@ -63,6 +63,13 @@ const PRODUCTS = [
 const BRANCHES = ["Localidad Ozama - Principal", "KM-9", "Localidad Santiago", "Localidad Punta Cana"];
 const STATUS_OPTIONS = ["Pendiente", "En Proceso", "Resuelto", "Rechazado", "Descartado"];
 
+const dashCard =
+  "rounded-xl border border-slate-100/80 bg-white shadow dark:border-slate-700 dark:bg-slate-900 dark:shadow-[0_4px_24px_rgba(0,0,0,0.35)]";
+const dashSelect =
+  "h-9 w-full rounded-md border border-slate-200 bg-white px-2.5 text-sm text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100";
+const dashFieldInput =
+  "rounded-lg border border-slate-200 bg-white px-3 py-2 text-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100";
+
 function filterByDatePreset(
   createdAt: string,
   preset: DatePreset,
@@ -202,12 +209,12 @@ function AssigneeCell({
     <div className="min-w-[9rem] max-w-[14rem]" title={hint}>
       <div className="flex flex-col gap-0.5">
         <span
-          className={`font-medium truncate ${username?.trim() ? "text-slate-800" : "text-slate-400 italic"}`}
+          className={`truncate font-medium ${username?.trim() ? "text-slate-800 dark:text-slate-200" : "text-slate-400 italic dark:text-slate-500"}`}
         >
           {primary}
         </span>
         {secondary && (
-          <span className="text-xs text-slate-500 truncate" title={secondary}>
+          <span className="truncate text-xs text-slate-500 dark:text-slate-400" title={secondary}>
             {secondary}
           </span>
         )}
@@ -218,15 +225,15 @@ function AssigneeCell({
 
 function StatusCell({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    Pendiente: "bg-red-100 text-red-800",
-    "En Proceso": "bg-blue-100 text-blue-800",
-    Resuelto: "bg-emerald-100 text-emerald-800",
-    Rechazado: "bg-red-100 text-red-800",
-    Descartado: "bg-slate-200 text-slate-700",
+    Pendiente: "bg-red-100 text-red-800 dark:bg-red-950/55 dark:text-red-200",
+    "En Proceso": "bg-blue-100 text-blue-800 dark:bg-blue-950/55 dark:text-blue-200",
+    Resuelto: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/55 dark:text-emerald-200",
+    Rechazado: "bg-red-100 text-red-800 dark:bg-red-950/55 dark:text-red-200",
+    Descartado: "bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200",
   };
   return (
     <span
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${styles[status] ?? "bg-slate-100 text-slate-700"}`}
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${styles[status] ?? "bg-slate-100 text-slate-700 dark:bg-slate-700 dark:text-slate-200"}`}
     >
       {status}
     </span>
@@ -238,6 +245,7 @@ type EditFormState = {
   branch: string;
   purchaseDate: string;
   phone: string;
+  email: string;
   product: string;
   serialNumber: string;
   description: string;
@@ -252,6 +260,7 @@ function ticketToEditForm(t: {
   branch: string;
   purchaseDate: string;
   phone: string;
+  email?: string;
   product: string;
   serialNumber: string;
   description: string;
@@ -265,6 +274,7 @@ function ticketToEditForm(t: {
     branch: t.branch,
     purchaseDate: t.purchaseDate,
     phone: t.phone,
+    email: t.email ?? "",
     product: t.product,
     serialNumber: t.serialNumber,
     description: t.description,
@@ -334,6 +344,7 @@ function TicketEditFormFields({
           branch: form.branch,
           purchaseDate: form.purchaseDate,
           phone: form.phone,
+          email: form.email.trim(),
           product: form.product,
           serialNumber: form.serialNumber,
           description: form.description.trim(),
@@ -359,14 +370,14 @@ function TicketEditFormFields({
       </DialogHeader>
 
       <div className="space-y-3">
-        <p className="text-sm font-mono text-slate-600">{ticketNumber}</p>
+        <p className="font-mono text-sm text-slate-600 dark:text-slate-400">{ticketNumber}</p>
 
         <div className="space-y-1">
           <Label className="text-sm">Estado</Label>
           <select
             value={form.status}
             onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
-            className="w-full h-9 text-sm rounded-md border border-slate-200 bg-white px-2.5"
+            className={dashSelect}
           >
             {STATUS_OPTIONS.map((s) => (
               <option key={s} value={s}>
@@ -381,7 +392,7 @@ function TicketEditFormFields({
           <select
             value={form.branch}
             onChange={(e) => setForm((f) => ({ ...f, branch: e.target.value }))}
-            className="w-full h-9 text-sm rounded-md border border-slate-200 bg-white px-2.5"
+            className={dashSelect}
           >
             <option value="">—</option>
             {BRANCHES.map((b) => (
@@ -399,15 +410,25 @@ function TicketEditFormFields({
               type="date"
               value={form.purchaseDate}
               onChange={(e) => setForm((f) => ({ ...f, purchaseDate: e.target.value }))}
-              className="h-9"
+              className={`h-9 ${dashFieldInput}`}
             />
           </div>
           <div className="space-y-1">
             <Label className="text-sm">Teléfono</Label>
             <Input
+              type="tel"
               value={form.phone}
               onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-              className="h-9"
+              className={`h-9 ${dashFieldInput}`}
+            />
+          </div>
+          <div className="space-y-1 sm:col-span-2">
+            <Label className="text-sm">Correo electrónico</Label>
+            <Input
+              type="email"
+              value={form.email}
+              onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
+              className={`h-9 ${dashFieldInput}`}
             />
           </div>
         </div>
@@ -417,7 +438,7 @@ function TicketEditFormFields({
           <select
             value={form.product}
             onChange={(e) => setForm((f) => ({ ...f, product: e.target.value }))}
-            className="w-full h-9 text-sm rounded-md border border-slate-200 bg-white px-2.5"
+            className={dashSelect}
           >
             <option value="">—</option>
             {PRODUCTS.map((p) => (
@@ -433,7 +454,7 @@ function TicketEditFormFields({
           <Input
             value={form.serialNumber}
             onChange={(e) => setForm((f) => ({ ...f, serialNumber: e.target.value }))}
-            className="h-9"
+            className={`h-9 ${dashFieldInput}`}
           />
         </div>
 
@@ -442,7 +463,7 @@ function TicketEditFormFields({
           <Textarea
             value={form.description}
             onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-            className="min-h-[88px] resize-none text-sm"
+            className={`min-h-[88px] resize-none text-sm ${dashFieldInput} placeholder:text-slate-400 dark:placeholder:text-slate-500`}
           />
         </div>
 
@@ -452,12 +473,16 @@ function TicketEditFormFields({
             <Input
               value={form.taxCredit}
               onChange={(e) => setForm((f) => ({ ...f, taxCredit: e.target.value }))}
-              className="h-9"
+              className={`h-9 ${dashFieldInput}`}
             />
           </div>
           <div className="space-y-1">
             <Label className="text-sm">RNC</Label>
-            <Input value={form.rnc} onChange={(e) => setForm((f) => ({ ...f, rnc: e.target.value }))} className="h-9" />
+            <Input
+              value={form.rnc}
+              onChange={(e) => setForm((f) => ({ ...f, rnc: e.target.value }))}
+              className={`h-9 ${dashFieldInput}`}
+            />
           </div>
         </div>
 
@@ -466,7 +491,7 @@ function TicketEditFormFields({
           <Textarea
             value={form.supportComment}
             onChange={(e) => setForm((f) => ({ ...f, supportComment: e.target.value }))}
-            className="min-h-[72px] resize-none text-sm"
+            className={`min-h-[72px] resize-none text-sm ${dashFieldInput} placeholder:text-slate-400 dark:placeholder:text-slate-500`}
             placeholder="Visible en la vista pública del ticket"
           />
         </div>
@@ -476,7 +501,7 @@ function TicketEditFormFields({
           <select
             value={form.assigneeUsername}
             onChange={(e) => setForm((f) => ({ ...f, assigneeUsername: e.target.value }))}
-            className="w-full h-9 text-sm rounded-md border border-slate-200 bg-white px-2.5"
+            className={dashSelect}
           >
             <option value="">Sin asignar</option>
             {TEMP_USERS.map(({ user: u }) => (
@@ -487,7 +512,7 @@ function TicketEditFormFields({
           </select>
         </div>
 
-        {editError && <p className="text-sm text-red-500">{editError}</p>}
+        {editError && <p className="text-sm text-red-500 dark:text-red-400">{editError}</p>}
       </div>
 
       <DialogFooter>
@@ -558,8 +583,8 @@ export default function Tickets() {
 
   if (isUserLoading || !user) {
     return (
-      <div className="min-h-dvh flex items-center justify-center bg-slate-50">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="flex min-h-dvh items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -574,17 +599,17 @@ export default function Tickets() {
 
   return (
     <DashboardLayout>
-      <div className="p-4 sm:p-6 bg-white rounded-xl shadow border border-slate-100">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4">
+      <div className={`${dashCard} p-4 sm:p-6`}>
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h2 className="text-2xl font-bold mb-2">Tickets</h2>
-            <p className="text-slate-600 m-0">Listado general de todos los tickets registrados.</p>
+            <h2 className="mb-2 text-2xl font-bold text-slate-900 dark:text-slate-100">Tickets</h2>
+            <p className="m-0 text-slate-600 dark:text-slate-400">Listado general de todos los tickets registrados.</p>
           </div>
           <Button
             type="button"
             variant="outline"
             size="sm"
-            className="group shrink-0 self-end sm:self-start inline-flex h-8 items-center gap-2 rounded-lg !border-slate-200/90 !bg-white px-3.5 text-xs font-medium !text-slate-800 shadow-[0_3px_14px_-3px_rgba(15,23,42,0.12),0_1px_6px_-2px_rgba(15,23,42,0.07)] transition-all duration-200 ease-out hover:-translate-y-0.5 hover:!border-[#347AFF]/45 hover:!bg-slate-50/90 hover:!text-[#2563EB] hover:shadow-[0_10px_28px_-8px_rgba(52,122,255,0.24),0_4px_12px_-6px_rgba(15,23,42,0.1)] active:translate-y-0 active:shadow-md disabled:pointer-events-none disabled:translate-y-0 disabled:opacity-45 disabled:shadow-[0_2px_6px_-2px_rgba(15,23,42,0.06)]"
+            className="group inline-flex h-8 shrink-0 items-center gap-2 self-end rounded-lg border border-slate-200/90 bg-white px-3.5 text-xs font-medium text-slate-800 shadow-[0_3px_14px_-3px_rgba(15,23,42,0.12),0_1px_6px_-2px_rgba(15,23,42,0.07)] transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-[#347AFF]/45 hover:bg-slate-50/90 hover:text-[#2563EB] hover:shadow-[0_10px_28px_-8px_rgba(52,122,255,0.24),0_4px_12px_-6px_rgba(15,23,42,0.1)] active:translate-y-0 active:shadow-md disabled:pointer-events-none disabled:translate-y-0 disabled:opacity-45 disabled:shadow-[0_2px_6px_-2px_rgba(15,23,42,0.06)] sm:self-start dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700 dark:hover:text-primary"
             disabled={isLoading || filteredList.length === 0}
             onClick={() => downloadTicketsCsv(filteredList)}
           >
@@ -595,17 +620,19 @@ export default function Tickets() {
 
         <div className="flex flex-col gap-4 mb-6">
           <div>
-            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Filtrar por fecha</p>
+            <p className="mb-2 text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Filtrar por fecha
+            </p>
             <div className="flex flex-wrap gap-2">
               {presetButtons.map(({ key, label }) => (
                 <button
                   key={key}
                   type="button"
                   onClick={() => setDatePreset(key)}
-                  className={`rounded-lg px-3 py-2 text-sm font-medium border transition-colors ${
+                  className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
                     datePreset === key
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                      ? "border-primary bg-primary/10 text-primary dark:bg-primary/20"
+                      : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
                   }`}
                 >
                   {label}
@@ -617,25 +644,25 @@ export default function Tickets() {
           {datePreset === "custom" && (
             <div className="flex flex-wrap items-end gap-3">
               <div className="space-y-1">
-                <Label className="text-xs text-slate-600">Desde</Label>
+                <Label className="text-xs text-slate-600 dark:text-slate-400">Desde</Label>
                 <Input
                   type="date"
                   value={customFrom}
                   onChange={(e) => setCustomFrom(e.target.value)}
-                  className="h-9 w-40"
+                  className={`h-9 w-40 ${dashFieldInput}`}
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-xs text-slate-600">Hasta</Label>
+                <Label className="text-xs text-slate-600 dark:text-slate-400">Hasta</Label>
                 <Input
                   type="date"
                   value={customTo}
                   onChange={(e) => setCustomTo(e.target.value)}
-                  className="h-9 w-40"
+                  className={`h-9 w-40 ${dashFieldInput}`}
                 />
               </div>
               {(!customFrom || !customTo) && (
-                <p className="text-xs text-amber-600 pb-2">Selecciona ambas fechas para aplicar el filtro.</p>
+                <p className="pb-2 text-xs text-amber-600 dark:text-amber-400">Selecciona ambas fechas para aplicar el filtro.</p>
               )}
             </div>
           )}
@@ -648,27 +675,27 @@ export default function Tickets() {
         </Dialog>
 
         {isLoading && (
-          <div className="flex items-center gap-2 text-slate-500 py-8">
-            <Loader2 className="w-5 h-5 animate-spin" />
+          <div className="flex items-center gap-2 py-8 text-slate-500 dark:text-slate-400">
+            <Loader2 className="h-5 w-5 animate-spin" />
             Cargando tickets...
           </div>
         )}
 
-        {error && <p className="text-red-500 py-4">No se pudieron cargar los tickets.</p>}
+        {error && <p className="py-4 text-red-500 dark:text-red-400">No se pudieron cargar los tickets.</p>}
 
         {!isLoading && !error && list.length === 0 && (
-          <p className="text-slate-500 py-8">No hay tickets registrados todavía.</p>
+          <p className="py-8 text-slate-500 dark:text-slate-400">No hay tickets registrados todavía.</p>
         )}
 
         {!isLoading && !error && list.length > 0 && filteredList.length === 0 && (
-          <p className="text-slate-500 py-8">No hay tickets en el rango de fechas seleccionado.</p>
+          <p className="py-8 text-slate-500 dark:text-slate-400">No hay tickets en el rango de fechas seleccionado.</p>
         )}
 
         {!isLoading && !error && filteredList.length > 0 && (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-left text-slate-500 uppercase tracking-wider">
+                <tr className="border-b border-slate-200 text-left uppercase tracking-wider text-slate-500 dark:border-slate-600 dark:text-slate-400">
                   <th className="pb-3 font-medium">Ticket</th>
                   <th className="pb-3 font-medium">Cliente</th>
                   <th className="pb-3 font-medium">Estado</th>
@@ -681,17 +708,17 @@ export default function Tickets() {
               </thead>
               <tbody>
                 {filteredList.map((t) => (
-                  <tr key={t.id} className="border-b border-slate-100 hover:bg-slate-50/50">
-                    <td className="py-3 font-medium text-slate-900">{t.ticket_number}</td>
+                  <tr key={t.id} className="border-b border-slate-100 hover:bg-slate-50/50 dark:border-slate-700 dark:hover:bg-slate-800/50">
+                    <td className="py-3 font-medium text-slate-900 dark:text-slate-100">{t.ticket_number}</td>
                     <td className="py-3 align-top">
                       <ClientTypeCell clientType={t.client_type} rnc={t.rnc} />
                     </td>
                     <td className="py-3">
                       <StatusCell status={t.status} />
                     </td>
-                    <td className="py-3 text-slate-700">{t.product && t.product !== "" ? t.product : "—"}</td>
+                    <td className="py-3 text-slate-700 dark:text-slate-300">{t.product && t.product !== "" ? t.product : "—"}</td>
                     <td
-                      className="py-3 text-slate-600 max-w-xs truncate"
+                      className="max-w-xs truncate py-3 text-slate-600 dark:text-slate-400"
                       title={t.description != null ? String(t.description) : ""}
                     >
                       {t.description && t.description !== "" ? String(t.description) : "—"}
@@ -703,7 +730,7 @@ export default function Tickets() {
                         status={t.status}
                       />
                     </td>
-                    <td className="py-3 text-slate-500">
+                    <td className="py-3 text-slate-500 dark:text-slate-400">
                       {t.created_at ? format(new Date(t.created_at), "dd MMM yyyy", { locale: es }) : "—"}
                     </td>
                     <td className="py-3 text-right">
@@ -711,7 +738,7 @@ export default function Tickets() {
                         <button
                           type="button"
                           onClick={(e) => handleOpenMenu(e, t.ticket_number)}
-                          className="p-1.5 rounded hover:bg-slate-100 text-slate-500"
+                          className="rounded p-1.5 text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
                           aria-label="Acciones"
                         >
                           <MoreVertical className="w-5 h-5" />
@@ -721,14 +748,14 @@ export default function Tickets() {
                             <>
                               <div className="fixed inset-0 z-40" aria-hidden onClick={() => setOpenMenu(null)} />
                               <ul
-                                className="fixed w-52 bg-white border border-slate-200 rounded-lg shadow-xl py-1 z-50 list-none m-0"
+                                className="fixed z-50 m-0 w-52 list-none rounded-lg border border-slate-200 bg-white py-1 shadow-xl dark:border-slate-600 dark:bg-slate-900"
                                 style={{ top: menuPosition.top, left: menuPosition.left }}
                               >
                                 {isAdmin && (
                                   <li>
                                     <button
                                       type="button"
-                                      className="w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 border-0 bg-transparent cursor-pointer"
+                                      className="w-full cursor-pointer border-0 bg-transparent px-4 py-2.5 text-left text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
                                       onClick={(ev) => {
                                         ev.stopPropagation();
                                         setOpenMenu(null);
@@ -742,7 +769,7 @@ export default function Tickets() {
                                 <li>
                                   <Link href={`/ticket/${t.ticket_number}/status`}>
                                     <a
-                                      className="block w-full text-left px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 no-underline"
+                                      className="block w-full px-4 py-2.5 text-left text-sm text-slate-700 no-underline hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
                                       onClick={() => setOpenMenu(null)}
                                     >
                                       Ver vista cliente
