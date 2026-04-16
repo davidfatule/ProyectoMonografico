@@ -4,6 +4,7 @@ import {
   getCachedUserAccounts,
   getCachedUserAccountByUsername,
   upsertCachedUserAccount,
+  deleteCachedUserAccount,
   type CachedUserAccount,
 } from "@/lib/indexedDb";
 
@@ -92,6 +93,20 @@ export function useUpdateUserActive() {
         active: data.active,
         role: data.role ?? finalExisting.role,
       });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+    },
+  });
+}
+
+export function useDeleteUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (username: string) => {
+      const normalized = username.trim().toLowerCase();
+      await deleteCachedUserAccount(normalized);
+      return { username: normalized };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });

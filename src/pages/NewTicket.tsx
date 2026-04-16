@@ -60,6 +60,7 @@ export default function NewTicket() {
   const createTicket = useCreateTicket();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [successTicketNumber, setSuccessTicketNumber] = useState<string | null>(null);
+  const [successEmailNotice, setSuccessEmailNotice] = useState<string>("");
   const [submitError, setSubmitError] = useState<string>("");
 
   const form = useForm<FormValues>({
@@ -81,17 +82,54 @@ export default function NewTicket() {
     }
   }, [clientType, setValue, clearErrors]);
 
-  const onSubmit = (data: FormValues) => {
+  const fileToDataUrl = (file: File): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === "string") {
+          resolve(reader.result);
+          return;
+        }
+        reject(new Error(`No se pudo leer el archivo: ${file.name}`));
+      };
+      reader.onerror = () => reject(new Error(`No se pudo leer el archivo: ${file.name}`));
+      reader.readAsDataURL(file);
+    });
+
+  const onSubmit = async (data: FormValues) => {
     setSubmitError("");
-    createTicket.mutate(data, {
+    try {
+      const attachments = await Promise.all(
+        selectedFiles.map(async (file) => ({
+          name: file.name,
+          type: file.type || "application/octet-stream",
+          size: file.size,
+          dataUrl: await fileToDataUrl(file),
+        }))
+      );
+
+      createTicket.mutate({ ...data, attachments }, {
       onSuccess: (response) => {
         setSuccessTicketNumber(response.ticketNumber);
+        if (response.emailNotification.sent) {
+          setSuccessEmailNotice("Se envio una confirmacion al correo del cliente.");
+        } else if (response.emailNotification.reason === "missing_config") {
+          setSuccessEmailNotice(
+            "Ticket creado. Correo automatico pendiente de configurar (EmailJS)."
+          );
+        } else {
+          setSuccessEmailNotice("Ticket creado. No se pudo enviar el correo de confirmacion.");
+        }
       },
       onError: (err) => {
         const message = err instanceof Error ? err.message : "No se pudo crear el ticket.";
         setSubmitError(message);
       },
-    });
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "No se pudieron procesar los archivos adjuntos.";
+      setSubmitError(message);
+    }
   };
 
   const goToTicketStatus = () => {
@@ -103,6 +141,7 @@ export default function NewTicket() {
 
   const closeSuccessModal = () => {
     setSuccessTicketNumber(null);
+    setSuccessEmailNotice("");
     form.reset(emptyDefaults);
     setSelectedFiles([]);
   };
@@ -128,6 +167,11 @@ export default function NewTicket() {
             <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
               Tu incidencia ha sido creada exitosamente. Guarda el siguiente número de ticket para consultar su estado:
             </p>
+            {successEmailNotice && (
+              <p className="mb-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                {successEmailNotice}
+              </p>
+            )}
             <div className="bg-slate-100 dark:bg-slate-800 rounded-lg px-4 py-3 mb-1">
               <p className="text-xs text-slate-600 dark:text-slate-400 mb-0.5">Número de Ticket</p>
               <p className="text-xl font-bold text-[#347AFF]">{successTicketNumber}</p>

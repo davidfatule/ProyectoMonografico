@@ -21,6 +21,12 @@ type TicketRow = {
   assignee_username?: string | null;
   client_type?: string | null;
   rnc?: string | null;
+  attachments?: Array<{
+    name: string;
+    type: string;
+    size: number;
+    dataUrl: string;
+  }>;
 };
 
 const STATUS_OPTIONS = [
@@ -69,6 +75,8 @@ export function TechnicianDashboard() {
   const [pendingCommentAction, setPendingCommentAction] = useState<PendingCommentAction>(null);
   const [supportComment, setSupportComment] = useState("");
   const [supportCommentError, setSupportCommentError] = useState("");
+  const [galleryTicket, setGalleryTicket] = useState<TicketRow | null>(null);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   const allTickets = (tickets || []) as TicketRow[];
   const list = allTickets.filter((t) => {
@@ -80,6 +88,9 @@ export function TechnicianDashboard() {
   const pendientes = list.filter((t) => t.status === "Pendiente").length;
   const enProceso = list.filter((t) => t.status === "En Proceso").length;
   const resueltos = list.filter((t) => t.status === "Resuelto").length;
+  const galleryImages = (galleryTicket?.attachments ?? []).filter(
+    (attachment) => attachment.type?.toLowerCase().startsWith("image/") && !!attachment.dataUrl
+  );
 
   const handleOpenMenu = (e: React.MouseEvent, ticketNumber: string) => {
     e.stopPropagation();
@@ -154,6 +165,56 @@ export function TechnicianDashboard() {
 
   return (
     <div>
+      <Dialog
+        open={!!galleryTicket}
+        onOpenChange={(open) => {
+          if (!open) {
+            setGalleryTicket(null);
+            setActiveImageIndex(0);
+          }
+        }}
+      >
+        <DialogContent className="w-[95vw] max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Imágenes del ticket {galleryTicket?.ticket_number ?? ""}</DialogTitle>
+            <DialogDescription>
+              {galleryImages.length > 0
+                ? `${galleryImages.length} imagen(es) registrada(s) por el cliente.`
+                : "Este ticket no tiene imágenes registradas."}
+            </DialogDescription>
+          </DialogHeader>
+          {galleryImages.length > 0 ? (
+            <div className="space-y-3">
+              <div className="flex justify-center rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-800/40">
+                <img
+                  src={galleryImages[activeImageIndex]?.dataUrl}
+                  alt={galleryImages[activeImageIndex]?.name ?? "Imagen del ticket"}
+                  className="max-h-[55vh] w-auto rounded-md object-contain"
+                />
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                {galleryImages.map((image, idx) => (
+                  <button
+                    key={`${image.name}-${idx}`}
+                    type="button"
+                    onClick={() => setActiveImageIndex(idx)}
+                    className={`rounded-md border px-2 py-1 text-xs ${
+                      idx === activeImageIndex
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-slate-300 text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+                    }`}
+                  >
+                    Imagen {idx + 1}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-slate-500 dark:text-slate-400">Imagen no registrada.</p>
+          )}
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={!!pendingCommentAction} onOpenChange={(open) => !open && closeCommentDialog()}>
         <DialogContent className="w-[92vw] max-w-lg">
           <DialogHeader>
@@ -278,6 +339,7 @@ export function TechnicianDashboard() {
                   <th className="pb-3 font-medium">Estado</th>
                   <th className="pb-3 font-medium">Producto</th>
                   <th className="pb-3 font-medium">Descripción</th>
+                  <th className="pb-3 font-medium">Imágenes</th>
                   <th className="pb-3 font-medium">Fecha creado</th>
                   <th className="pb-3 font-medium text-right">Acción</th>
                 </tr>
@@ -300,6 +362,23 @@ export function TechnicianDashboard() {
                       title={t.description != null ? String(t.description) : ""}
                     >
                       {(t.description != null && t.description !== "") ? String(t.description) : "—"}
+                    </td>
+                    <td className="py-3">
+                      {(t.attachments ?? []).some((attachment) => attachment.type?.toLowerCase().startsWith("image/")) ? (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setGalleryTicket(t);
+                            setActiveImageIndex(0);
+                          }}
+                        >
+                          Ver imágenes
+                        </Button>
+                      ) : (
+                        <span className="text-xs text-slate-400 dark:text-slate-500">Imagen no registrada</span>
+                      )}
                     </td>
                     <td className="py-3 text-slate-500 dark:text-slate-400">
                       {t.created_at ? format(new Date(t.created_at), "dd MMM yyyy", { locale: es }) : "—"}

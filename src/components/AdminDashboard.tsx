@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useTickets } from "@/hooks/tickets";
 import { useEvaluations } from "@/hooks/evaluations";
-import { useUsers, useCreateTechnician, useUpdateUserActive } from "@/hooks/user";
+import { useUsers, useCreateTechnician, useUpdateUserActive, useDeleteUser } from "@/hooks/user";
 
 type UserFormState = {
   username: string;
@@ -44,6 +44,7 @@ export function AdminDashboard() {
 
   const createTechnician = useCreateTechnician();
   const updateUserActive = useUpdateUserActive();
+  const deleteUser = useDeleteUser();
 
   const [userModalOpen, setUserModalOpen] = useState(false);
   const [editingUsername, setEditingUsername] = useState<string | null>(null);
@@ -132,6 +133,22 @@ export function AdminDashboard() {
         onError: (err) => setUserFormError(err instanceof Error ? err.message : "No se pudo actualizar el usuario."),
       }
     );
+  };
+
+  const handleDeleteUser = () => {
+    if (!editingUsername) return;
+    const confirmed = window.confirm(`¿Seguro que deseas eliminar el usuario "${editingUsername}"? Esta acción no se puede deshacer.`);
+    if (!confirmed) return;
+
+    setUserFormError("");
+    deleteUser.mutate(editingUsername, {
+      onSuccess: () => {
+        setUserModalOpen(false);
+        setEditingUsername(null);
+      },
+      onError: (err) =>
+        setUserFormError(err instanceof Error ? err.message : "No se pudo eliminar el usuario."),
+    });
   };
 
   if (isTicketsLoading || isUsersLoading) {
@@ -235,7 +252,14 @@ export function AdminDashboard() {
                       <span className="text-slate-700 dark:text-slate-300">{u.role}</span>
                     </td>
                     <td className="py-3">
-                      <Badge variant={u.active ? "success" : "destructive"} color="primary" className="bg-opacity-70">
+                      <Badge
+                        variant={u.active ? "success" : "destructive"}
+                        className={
+                          u.active
+                            ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/45 dark:text-emerald-300"
+                            : "bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300"
+                        }
+                      >
                         {u.active ? "Activo" : "Inactivo"}
                       </Badge>
                     </td>
@@ -341,13 +365,29 @@ export function AdminDashboard() {
             </div>
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setUserModalOpen(false)} disabled={createTechnician.isPending || updateUserActive.isPending}>
+              {editingUsername && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleDeleteUser}
+                  disabled={createTechnician.isPending || updateUserActive.isPending || deleteUser.isPending}
+                  className="border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-950/40"
+                >
+                  {deleteUser.isPending ? "Eliminando..." : "Eliminar usuario"}
+                </Button>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setUserModalOpen(false)}
+                disabled={createTechnician.isPending || updateUserActive.isPending || deleteUser.isPending}
+              >
                 Cancelar
               </Button>
               <Button
                 type="button"
                 onClick={submitUser}
-                disabled={createTechnician.isPending || updateUserActive.isPending}
+                disabled={createTechnician.isPending || updateUserActive.isPending || deleteUser.isPending}
               >
                 {editingUsername ? "Guardar cambios" : "Crear usuario"}
               </Button>

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getFirstTechnicianUsername } from "@/lib/mockAuth";
 import { getNextTechnicianAssigneeUsername } from "@/lib/technicianPresence";
 import { getMockTicketByNumber } from "@/lib/mockTickets";
+import { sendTicketCreatedEmail, sendTicketStatusUpdatedEmail } from "@/lib/ticketEmail";
 import {
   getCachedTickets,
   getCachedTicketByNumber,
@@ -30,10 +31,18 @@ type LocalTicket = {
   taxCredit?: string;
   rnc?: string;
   fileUrl?: string;
+  attachments?: LocalTicketAttachment[];
   createdAt: string;
   assignee?: { username: string } | null;
   evaluation?: { rating: number; comment?: string } | null;
   supportComment?: string;
+};
+
+type LocalTicketAttachment = {
+  name: string;
+  type: string;
+  size: number;
+  dataUrl: string;
 };
 
 function toLocalTicket(ticket: CachedTicket): LocalTicket {
@@ -50,6 +59,21 @@ function toLocalTicket(ticket: CachedTicket): LocalTicket {
   const clientType =
     rawClientType === "empresa" || rawClientType === "negocio" || rawClientType === "individual"
       ? rawClientType
+      : undefined;
+
+  const attachmentsRaw = ticket.attachments;
+  const attachments =
+    Array.isArray(attachmentsRaw)
+      ? attachmentsRaw.filter((item): item is LocalTicketAttachment => {
+          if (!item || typeof item !== "object") return false;
+          const candidate = item as Record<string, unknown>;
+          return (
+            typeof candidate.name === "string" &&
+            typeof candidate.type === "string" &&
+            typeof candidate.size === "number" &&
+            typeof candidate.dataUrl === "string"
+          );
+        })
       : undefined;
 
   return {
@@ -77,6 +101,7 @@ function toLocalTicket(ticket: CachedTicket): LocalTicket {
     taxCredit: typeof ticket.taxCredit === "string" ? ticket.taxCredit : undefined,
     rnc: typeof ticket.rnc === "string" ? ticket.rnc : undefined,
     fileUrl: typeof ticket.fileUrl === "string" ? ticket.fileUrl : undefined,
+    attachments,
     createdAt,
     assignee:
       ticket.assignee && typeof ticket.assignee === "object"
@@ -104,6 +129,7 @@ function toDashboardRow(ticket: LocalTicket) {
     support_comment: ticket.supportComment ?? null,
     client_type: ticket.clientType ?? null,
     rnc: ticket.rnc ?? null,
+    attachments: ticket.attachments ?? [],
   };
 }
 
@@ -169,6 +195,20 @@ export function useCreateTicket() {
           ? clientTypeRaw
           : undefined;
       const isIndividual = clientType === "individual";
+      const attachmentsRaw = data.attachments;
+      const attachments =
+        Array.isArray(attachmentsRaw)
+          ? attachmentsRaw.filter((item): item is LocalTicketAttachment => {
+              if (!item || typeof item !== "object") return false;
+              const candidate = item as Record<string, unknown>;
+              return (
+                typeof candidate.name === "string" &&
+                typeof candidate.type === "string" &&
+                typeof candidate.size === "number" &&
+                typeof candidate.dataUrl === "string"
+              );
+            })
+          : undefined;
 
       const localTicket: LocalTicket = {
         id: nextId,
@@ -189,6 +229,7 @@ export function useCreateTicket() {
             : undefined,
         rnc: isIndividual ? undefined : typeof data.rnc === "string" ? data.rnc.trim() || undefined : undefined,
         fileUrl: typeof data.fileUrl === "string" ? data.fileUrl : undefined,
+        attachments,
         createdAt,
         assignee: { username: getNextTechnicianAssigneeUsername() },
         evaluation: null,
@@ -196,7 +237,17 @@ export function useCreateTicket() {
       };
 
       await upsertCachedTicket(localTicket as unknown as CachedTicket);
-      return { ticketNumber, id: nextId };
+      const emailNotification = await sendTicketCreatedEmail({
+        toEmail: localTicket.email,
+        ticketNumber,
+        status: localTicket.status,
+        description: localTicket.description,
+        branch: localTicket.branch,
+        product: localTicket.product,
+        serialNumber: localTicket.serialNumber,
+        supportComment: localTicket.supportComment,
+      });
+      return { ticketNumber, id: nextId, emailNotification };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tickets"] });
@@ -224,7 +275,22 @@ export function useUpdateTicketStatus() {
         status,
         supportComment: comment !== undefined ? comment : local.supportComment,
       } as unknown as CachedTicket);
-      return { ticket_number: ticketNumber, status, supportComment: comment };
+      const updatedTicket = {
+        ...local,
+        status,
+        supportComment: comment !== undefined ? comment : local.supportComment,
+      };
+      const emailNotification = await sendTicketStatusUpdatedEmail({
+        toEmail: updatedTicket.email,
+        ticketNumber: updatedTicket.ticketNumber,
+        status: updatedTicket.status,
+        description: updatedTicket.description,
+        branch: updatedTicket.branch,
+        product: updatedTicket.product,
+        serialNumber: updatedTicket.serialNumber,
+        supportComment: updatedTicket.supportComment,
+      });
+      return { ticket_number: ticketNumber, status, supportComment: comment, emailNotification };
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["tickets"] });

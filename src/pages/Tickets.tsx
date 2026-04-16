@@ -41,6 +41,12 @@ type TicketRow = {
   support_comment?: string | null;
   client_type?: string | null;
   rnc?: string | null;
+  attachments?: Array<{
+    name: string;
+    type: string;
+    size: number;
+    dataUrl: string;
+  }>;
 };
 
 type DatePreset = "all" | "today" | "week" | "month" | "custom";
@@ -535,6 +541,8 @@ export default function Tickets() {
   const [datePreset, setDatePreset] = useState<DatePreset>("all");
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
+  const [galleryTicket, setGalleryTicket] = useState<TicketRow | null>(null);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
@@ -560,6 +568,9 @@ export default function Tickets() {
   const filteredList = useMemo(() => {
     return list.filter((t) => filterByDatePreset(t.created_at, datePreset, customFrom, customTo));
   }, [list, datePreset, customFrom, customTo]);
+  const galleryImages = (galleryTicket?.attachments ?? []).filter(
+    (attachment) => attachment.type?.toLowerCase().startsWith("image/") && !!attachment.dataUrl
+  );
 
   const handleOpenMenu = (e: React.MouseEvent, ticketNumber: string) => {
     e.stopPropagation();
@@ -673,6 +684,55 @@ export default function Tickets() {
             <TicketEditDialogContent ticketNumber={editTicketNumber} onClose={closeEdit} />
           )}
         </Dialog>
+        <Dialog
+          open={!!galleryTicket}
+          onOpenChange={(open) => {
+            if (!open) {
+              setGalleryTicket(null);
+              setActiveImageIndex(0);
+            }
+          }}
+        >
+          <DialogContent className="w-[95vw] max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Imágenes del ticket {galleryTicket?.ticket_number ?? ""}</DialogTitle>
+              <DialogDescription>
+                {galleryImages.length > 0
+                  ? `${galleryImages.length} imagen(es) registrada(s) por el cliente.`
+                  : "Este ticket no tiene imágenes registradas."}
+              </DialogDescription>
+            </DialogHeader>
+            {galleryImages.length > 0 ? (
+              <div className="space-y-3">
+                <div className="flex justify-center rounded-lg border border-slate-200 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-800/40">
+                  <img
+                    src={galleryImages[activeImageIndex]?.dataUrl}
+                    alt={galleryImages[activeImageIndex]?.name ?? "Imagen del ticket"}
+                    className="max-h-[55vh] w-auto rounded-md object-contain"
+                  />
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {galleryImages.map((image, idx) => (
+                    <button
+                      key={`${image.name}-${idx}`}
+                      type="button"
+                      onClick={() => setActiveImageIndex(idx)}
+                      className={`rounded-md border px-2 py-1 text-xs ${
+                        idx === activeImageIndex
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-slate-300 text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+                      }`}
+                    >
+                      Imagen {idx + 1}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-slate-500 dark:text-slate-400">Imagen no registrada.</p>
+            )}
+          </DialogContent>
+        </Dialog>
 
         {isLoading && (
           <div className="flex items-center gap-2 py-8 text-slate-500 dark:text-slate-400">
@@ -702,6 +762,7 @@ export default function Tickets() {
                   <th className="pb-3 font-medium">Producto</th>
                   <th className="pb-3 font-medium">Descripción</th>
                   <th className="pb-3 font-medium">Asignado / seguimiento</th>
+                  <th className="pb-3 font-medium">Imágenes</th>
                   <th className="pb-3 font-medium">Fecha creado</th>
                   <th className="pb-3 font-medium text-right">Acción</th>
                 </tr>
@@ -729,6 +790,23 @@ export default function Tickets() {
                         supportComment={t.support_comment}
                         status={t.status}
                       />
+                    </td>
+                    <td className="py-3">
+                      {(t.attachments ?? []).some((attachment) => attachment.type?.toLowerCase().startsWith("image/")) ? (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setGalleryTicket(t);
+                            setActiveImageIndex(0);
+                          }}
+                        >
+                          Ver imágenes
+                        </Button>
+                      ) : (
+                        <span className="text-xs text-slate-400 dark:text-slate-500">Imagen no registrada</span>
+                      )}
                     </td>
                     <td className="py-3 text-slate-500 dark:text-slate-400">
                       {t.created_at ? format(new Date(t.created_at), "dd MMM yyyy", { locale: es }) : "—"}

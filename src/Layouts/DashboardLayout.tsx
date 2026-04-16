@@ -114,7 +114,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <span className="font-semibold text-slate-800 dark:text-slate-100 truncate text-sm sm:text-base">Andrickson Soporte</span>
             </Link>
             <div className="flex items-center gap-0.5 shrink-0">
-              <ThemeToggle />
               <button
                 type="button"
                 className="lg:hidden rounded-lg p-2 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 touch-manipulation"
@@ -160,16 +159,18 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col lg:min-h-screen">
-        <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 lg:hidden pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <header className="sticky top-0 z-30 flex items-center gap-3 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
           <button
             type="button"
-            className="rounded-lg p-2 text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+            className="rounded-lg p-2 text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center lg:hidden"
             aria-label="Abrir menú"
             onClick={() => setMobileNavOpen(true)}
           >
             <Menu className="w-6 h-6" />
           </button>
-          <span className="min-w-0 flex-1 truncate font-semibold text-slate-800 dark:text-slate-100">Andrickson Soporte</span>
+          <span className="min-w-0 flex-1 truncate font-semibold text-slate-800 dark:text-slate-100">
+            Andrickson Soporte
+          </span>
           <ThemeToggle />
         </header>
 

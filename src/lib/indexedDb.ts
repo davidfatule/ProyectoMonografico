@@ -238,3 +238,12 @@ export async function upsertCachedUserAccount(account: CachedUserAccount): Promi
     // Ignorar fallos de persistencia local.
   }
 }
+
+export async function deleteCachedUserAccount(username: string): Promise<void> {
+  try {
+    const normalized = normalizeUsername(username);
+    await runTransaction<undefined>(USERS_STORE, "readwrite", (store) => store.delete(normalized));
+  } catch {
+    // Ignorar fallos de persistencia local.
+  }
+}
