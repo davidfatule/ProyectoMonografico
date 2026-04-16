@@ -28,6 +28,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const isTechnician = user?.role === "technician";
   const isAdmin = user?.role === "admin";
   const dashboardLabel = isTechnician ? "Soporte al cliente" : "Dashboard";
+  const topHeaderTitle = isTechnician ? "Panel Técnico" : isAdmin ? "Panel de Administración" : "Panel";
 
   const roleLabel = user?.role === "admin" ? "Admin" : user?.role === "technician" ? "Técnico" : user?.role ?? "";
   const userEmail = user?.username || "";
@@ -169,7 +170,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <Menu className="w-6 h-6" />
           </button>
           <span className="min-w-0 flex-1 truncate font-semibold text-slate-800 dark:text-slate-100">
-            Andrickson Soporte
+            {topHeaderTitle}
           </span>
           <ThemeToggle />
         </header>
