@@ -155,11 +155,17 @@ export default function TicketStatus() {
                   );
                 })}
               </div>
-              <div className="mt-3 flex justify-between gap-1 sm:gap-2">
+              <div className="relative mt-3 h-6 w-full">
                 {STATUS_STEPS.map((step, idx) => (
                   <span
                     key={`${step}-label`}
-                    className={`min-w-0 flex-1 text-center text-xs leading-tight sm:text-sm ${getStepLabelClass(idx, currentStep)}`}
+                    className={`absolute min-w-[5.5rem] text-center text-xs leading-tight sm:min-w-[7rem] sm:text-sm ${getStepLabelClass(idx, currentStep)} ${
+                      idx === 0
+                        ? "left-0 -translate-x-0"
+                        : idx === STATUS_STEPS.length - 1
+                          ? "right-0 translate-x-0"
+                          : "left-1/2 -translate-x-1/2"
+                    }`}
                   >
                     {step}
                   </span>
